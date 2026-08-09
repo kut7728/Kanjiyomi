@@ -8,8 +8,14 @@ import SwiftData
 import UIKit
 
 enum ScanPipeline {
-    static func process(image: UIImage, modelContext: ModelContext) async throws -> [RecognizedWord] {
+    static func process(
+        image: UIImage,
+        modelContext: ModelContext,
+        onProgress: @MainActor (String) -> Void = { _ in }
+    ) async throws -> [RecognizedWord] {
+        await onProgress("사진에서 글자를 찾고 있어요")
         let spans = try await OCRService.recognizeTokens(in: image)
+        await onProgress("단어를 나누고 있어요")
 
         // Merge repeats of the same word so every occurrence stays highlightable.
         var order: [String] = []
@@ -26,8 +32,9 @@ enum ScanPipeline {
         }
 
         var words: [RecognizedWord] = []
-        for key in order {
+        for (index, key) in order.enumerated() {
             guard let group = grouped[key] else { continue }
+            await onProgress("뜻과 예문을 만들고 있어요 \(index + 1)/\(order.count)")
             let enriched = await MeaningService.shared.enrich(
                 surface: group.surface,
                 lemma: group.lemma,

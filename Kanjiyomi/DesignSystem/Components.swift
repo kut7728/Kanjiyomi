@@ -103,51 +103,34 @@ struct KYDotLoadingView: View {
     }
 }
 
-struct KYSkeletonRow: View {
-    @State private var shimmer = false
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(KYColor.textSecondary.opacity(0.15))
-            .frame(height: 72)
-            .overlay(
-                LinearGradient(
-                    colors: [
-                        .clear,
-                        Color.white.opacity(0.45),
-                        .clear
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .offset(x: shimmer ? 220 : -220)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .onAppear {
-                withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) {
-                    shimmer = true
-                }
-            }
-    }
-}
-
 struct KYLoadingOverlay: View {
     let message: String
 
     var body: some View {
         VStack(spacing: 20) {
             KYDotLoadingView()
-            Text(message)
-                .font(KYFont.headline())
-                .foregroundStyle(KYColor.textPrimary)
-            VStack(spacing: 12) {
-                KYSkeletonRow()
-                KYSkeletonRow()
-                KYSkeletonRow()
+
+            // Each step slides up as it replaces the previous one.
+            ZStack {
+                Text(message)
+                    .font(KYFont.headline())
+                    .foregroundStyle(KYColor.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .id(message)
+                    .transition(
+                        .asymmetric(
+                            insertion: .move(edge: .bottom).combined(with: .opacity),
+                            removal: .move(edge: .top).combined(with: .opacity)
+                        )
+                    )
             }
-            .padding(.top, 8)
+            .frame(height: 26)
+            .clipped()
+            .animation(.spring(response: 0.42, dampingFraction: 0.86), value: message)
         }
-        .padding(28)
+        .padding(.horizontal, 32)
+        .padding(.vertical, 28)
+        .frame(minWidth: 240)
         .background(KYColor.card)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: Color.black.opacity(0.08), radius: 20, x: 0, y: 8)
