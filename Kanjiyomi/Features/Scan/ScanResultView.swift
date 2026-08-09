@@ -10,6 +10,8 @@ struct ScanResultView: View {
 
     @State private var isExpanded = false
     @State private var dragTranslation: CGFloat = 0
+    @State private var listOffset: CGFloat = 0
+    @State private var isDraggingSheet = false
 
     var body: some View {
         GeometryReader { geo in
@@ -123,7 +125,7 @@ struct ScanResultView: View {
         VStack(spacing: 0) {
             panelHeader
                 .contentShape(Rectangle())
-                .gesture(dragGesture(collapsed: collapsed, expanded: expanded))
+                .gesture(dragGesture(collapsed: collapsed, expanded: expanded, fromList: false))
 
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
@@ -151,6 +153,17 @@ struct ScanResultView: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 24)
                 }
+                .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                    geometry.contentOffset.y + geometry.contentInsets.top
+                } action: { _, offset in
+                    listOffset = offset
+                }
+                // The list scrolls normally; only a pull past its top while expanded
+                // hands the drag over to the sheet.
+                .scrollDisabled(isDraggingSheet)
+                .simultaneousGesture(
+                    dragGesture(collapsed: collapsed, expanded: expanded, fromList: true)
+                )
             }
         }
         .frame(maxWidth: .infinity)
@@ -193,12 +206,19 @@ struct ScanResultView: View {
         }
     }
 
-    private func dragGesture(collapsed: CGFloat, expanded: CGFloat) -> some Gesture {
-        DragGesture()
+    private func dragGesture(collapsed: CGFloat, expanded: CGFloat, fromList: Bool) -> some Gesture {
+        DragGesture(minimumDistance: fromList ? 6 : 0)
             .onChanged { value in
+                if !isDraggingSheet {
+                    guard canStartSheetDrag(translation: value.translation.height, fromList: fromList) else {
+                        return
+                    }
+                    isDraggingSheet = true
+                }
                 dragTranslation = value.translation.height
             }
             .onEnded { value in
+                guard isDraggingSheet else { return }
                 let threshold: CGFloat = 60
                 withAnimation(.spring(response: 0.38, dampingFraction: 0.85)) {
                     if value.translation.height < -threshold {
@@ -208,7 +228,14 @@ struct ScanResultView: View {
                     }
                     dragTranslation = 0
                 }
+                isDraggingSheet = false
             }
+    }
+
+    private func canStartSheetDrag(translation: CGFloat, fromList: Bool) -> Bool {
+        guard fromList else { return true }
+        // Only take over when the expanded list can no longer scroll up.
+        return isExpanded && listOffset <= 0.5 && translation > 0
     }
 
     private func wordRow(_ word: RecognizedWord) -> some View {
