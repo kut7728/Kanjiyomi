@@ -6,7 +6,7 @@
 import CoreGraphics
 import Foundation
 
-struct RecognizedWord: Identifiable, Hashable, Sendable {
+struct RecognizedWord: Identifiable, Hashable, Codable, Sendable {
     let id: UUID
     var surface: String
     var lemma: String

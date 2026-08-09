@@ -9,7 +9,7 @@ import Foundation
 /// Four corners of a recognized text region in Vision normalized coordinates
 /// (0...1, origin at bottom-left). Keeping the quad instead of an axis-aligned
 /// rect preserves rotation and perspective of signage text.
-struct TextQuad: Hashable, Sendable {
+struct TextQuad: Hashable, Codable, Sendable {
     var topLeft: CGPoint
     var topRight: CGPoint
     var bottomRight: CGPoint
