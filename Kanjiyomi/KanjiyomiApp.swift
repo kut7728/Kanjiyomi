@@ -2,16 +2,26 @@
 //  KanjiyomiApp.swift
 //  Kanjiyomi
 //
-//  Created by kut7728 on 2026/08/09.
-//
 
+import SwiftData
 import SwiftUI
 
 @main
 struct KanjiyomiApp: App {
+    var sharedModelContainer: ModelContainer = {
+        let schema = Schema([VocabWord.self, WordCache.self])
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        do {
+            return try ModelContainer(for: schema, configurations: [config])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(sharedModelContainer)
     }
 }
