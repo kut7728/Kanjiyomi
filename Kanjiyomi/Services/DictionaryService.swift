@@ -6,7 +6,8 @@
 import Foundation
 import SQLite3
 
-final class DictionaryService: @unchecked Sendable {
+/// Lock-protected so lookups can run off the main actor during recognition.
+nonisolated final class DictionaryService: @unchecked Sendable {
     static let shared = DictionaryService()
 
     private var db: OpaquePointer?

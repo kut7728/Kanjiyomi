@@ -192,11 +192,18 @@ struct ScanResultView: View {
                 .frame(width: 40, height: 5)
                 .padding(.top, 10)
 
-            HStack {
+            HStack(spacing: 8) {
                 Text("인식된 단어")
                     .font(KYFont.headline())
                     .foregroundStyle(KYColor.textPrimary)
                 Spacer()
+                if viewModel.isGeneratingMeanings {
+                    ProgressView()
+                        .controlSize(.mini)
+                    Text("뜻 생성 중")
+                        .font(KYFont.caption())
+                        .foregroundStyle(KYColor.textSecondary)
+                }
                 Text("\(viewModel.words.count)개")
                     .font(KYFont.caption())
                     .foregroundStyle(KYColor.textSecondary)

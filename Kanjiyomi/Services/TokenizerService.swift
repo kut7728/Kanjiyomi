@@ -19,7 +19,7 @@ struct TokenSpan: Sendable {
     let quad: TextQuad
 }
 
-enum TokenizerService {
+nonisolated enum TokenizerService {
     /// Particle / function-word lemmas to drop from vocabulary lists.
     private static let stopLemmas: Set<String> = [
         "の", "に", "は", "を", "が", "と", "で", "も", "へ", "や",

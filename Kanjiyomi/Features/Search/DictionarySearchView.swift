@@ -117,13 +117,12 @@ struct DictionarySearchView: View {
         let headword = entry.kanji.isEmpty ? entry.reading : entry.kanji
         isLoadingWord = true
         Task {
-            let enriched = await MeaningService.shared.enrich(
+            let enriched = MeaningService.shared.resolve(
                 surface: headword,
                 lemma: headword,
                 modelContext: modelContext
             )
-            isLoadingWord = false
-            detailWord = RecognizedWord(
+            var word = RecognizedWord(
                 surface: headword,
                 lemma: headword,
                 reading: enriched.reading.isEmpty ? entry.reading : enriched.reading,
@@ -133,6 +132,19 @@ struct DictionarySearchView: View {
                 partOfSpeech: enriched.partOfSpeech,
                 examples: enriched.examples
             )
+            // Only the meaning is generated here; the detail screen writes the examples.
+            if word.meaningKO.isEmpty {
+                let generated = await MeaningService.shared.generateMeanings(
+                    for: [word],
+                    modelContext: modelContext
+                )
+                let key = WordCache.makeKey(surface: word.surface, lemma: word.lemma)
+                if let meaning = generated[key] {
+                    word.meaningKO = meaning
+                }
+            }
+            isLoadingWord = false
+            detailWord = word
         }
     }
 }

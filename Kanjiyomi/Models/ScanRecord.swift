@@ -40,8 +40,21 @@ final class ScanRecord {
             imageData: imageData,
             wordsData: encoded,
             wordCount: words.count,
-            previewText: words.prefix(4).map(\.displayHeadword).joined(separator: " · ")
+            previewText: Self.preview(for: words)
         )
+    }
+
+    /// Meanings are generated after the record is first written, so the stored words
+    /// are refreshed once generation finishes.
+    func update(words: [RecognizedWord]) {
+        guard let encoded = try? JSONEncoder().encode(words) else { return }
+        wordsData = encoded
+        wordCount = words.count
+        previewText = Self.preview(for: words)
+    }
+
+    private static func preview(for words: [RecognizedWord]) -> String {
+        words.prefix(4).map(\.displayHeadword).joined(separator: " · ")
     }
 
     var words: [RecognizedWord] {

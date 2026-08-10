@@ -153,7 +153,7 @@ struct ScanView: View {
 
     private func historyRow(_ record: ScanRecord) -> some View {
         Button {
-            viewModel.load(record)
+            viewModel.load(record, modelContext: modelContext)
         } label: {
             KYCard {
                 HStack(spacing: 14) {

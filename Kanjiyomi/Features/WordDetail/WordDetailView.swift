@@ -10,7 +10,8 @@ struct WordDetailView: View {
     let word: RecognizedWord
     @Environment(\.modelContext) private var modelContext
     @State private var isSaved = false
-    @State private var showSavedToast = false
+    @State private var examples: [WordExample] = []
+    @State private var isLoadingExamples = false
 
     var body: some View {
         ZStack {
@@ -63,12 +64,21 @@ struct WordDetailView: View {
                                 .font(KYFont.caption())
                                 .foregroundStyle(KYColor.textSecondary)
 
-                            if word.examples.isEmpty {
+                            if isLoadingExamples {
+                                HStack(spacing: 12) {
+                                    KYDotLoadingView()
+                                    Text("예문을 만들고 있어요")
+                                        .font(KYFont.callout())
+                                        .foregroundStyle(KYColor.textSecondary)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 4)
+                            } else if examples.isEmpty {
                                 Text("예문이 아직 없어요.")
                                     .font(KYFont.callout())
                                     .foregroundStyle(KYColor.textSecondary)
                             } else {
-                                ForEach(Array(word.examples.enumerated()), id: \.offset) { _, example in
+                                ForEach(Array(examples.enumerated()), id: \.offset) { _, example in
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(example.japanese)
                                             .font(KYFont.body())
@@ -101,6 +111,23 @@ struct WordDetailView: View {
         .navigationTitle("단어 상세")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { refreshSavedState() }
+        .task { await loadExamples() }
+    }
+
+    /// Examples are the bulk of what the model has to write, so they are generated here
+    /// instead of during the scan where they would hold up every other word.
+    private func loadExamples() async {
+        guard examples.isEmpty, !isLoadingExamples else { return }
+
+        if !word.examples.isEmpty {
+            examples = word.examples
+            return
+        }
+        guard MeaningService.shared.isGenerationAvailable else { return }
+
+        isLoadingExamples = true
+        examples = await MeaningService.shared.examples(for: word, modelContext: modelContext)
+        isLoadingExamples = false
     }
 
     private func refreshSavedState() {
@@ -114,7 +141,9 @@ struct WordDetailView: View {
     }
 
     private func saveToVocabulary() {
-        let vocab = VocabWord(from: word)
+        var stored = word
+        stored.examples = examples
+        let vocab = VocabWord(from: stored)
         modelContext.insert(vocab)
         try? modelContext.save()
         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
