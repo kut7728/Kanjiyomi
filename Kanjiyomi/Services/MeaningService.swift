@@ -68,21 +68,18 @@ final class MeaningService {
     /// so it can be shown before any Korean meaning has been generated.
     func resolve(surface: String, lemma: String, modelContext: ModelContext) -> EnrichedWord {
         let key = WordCache.makeKey(surface: surface, lemma: lemma)
+        let cached = cacheRow(key: key, context: modelContext)
 
-        if let cached = cacheRow(key: key, context: modelContext) {
-            if Self.containsHangul(cached.meaningKO) {
-                return EnrichedWord(
-                    reading: cached.reading,
-                    hangul: cached.hangul,
-                    meaningKO: cached.meaningKO,
-                    meaningEN: cached.meaningEN,
-                    partOfSpeech: cached.partOfSpeech,
-                    examples: cached.examples
-                )
-            }
-            // Rows written while the model was unavailable hold an English gloss;
-            // drop them so the Korean meaning can be generated on a later run.
-            modelContext.delete(cached)
+        // The whole point of the cache: a word seen in an earlier scan skips the model.
+        if let cached, Self.containsHangul(cached.meaningKO) {
+            return EnrichedWord(
+                reading: cached.reading,
+                hangul: cached.hangul,
+                meaningKO: cached.meaningKO,
+                meaningEN: cached.meaningEN,
+                partOfSpeech: cached.partOfSpeech,
+                examples: cached.examples
+            )
         }
 
         let dict = DictionaryService.shared.lookup(surface: surface, lemma: lemma)
@@ -93,7 +90,7 @@ final class MeaningService {
             meaningKO: "",
             meaningEN: dict?.glossEN ?? "",
             partOfSpeech: dict?.partOfSpeech ?? "",
-            examples: []
+            examples: cached?.examples ?? []
         )
 
         // Tokens with no dictionary hit are dropped by the caller, so there is nothing
@@ -101,17 +98,29 @@ final class MeaningService {
         guard !enriched.reading.isEmpty || !enriched.meaningEN.isEmpty else { return enriched }
 
         // Store the dictionary half now so generation only has to fill in the meaning.
-        let row = WordCache(
-            key: key,
-            surface: surface,
-            lemma: lemma,
-            reading: enriched.reading,
-            hangul: enriched.hangul,
-            meaningKO: "",
-            meaningEN: enriched.meaningEN,
-            partOfSpeech: enriched.partOfSpeech
-        )
-        modelContext.insert(row)
+        // Rows written while the model was unavailable hold no Korean meaning; refresh
+        // them in place so any example sentences already generated survive.
+        if let cached {
+            cached.reading = enriched.reading
+            cached.hangul = enriched.hangul
+            cached.meaningKO = ""
+            cached.meaningEN = enriched.meaningEN
+            cached.partOfSpeech = enriched.partOfSpeech
+            cached.updatedAt = .now
+        } else {
+            modelContext.insert(
+                WordCache(
+                    key: key,
+                    surface: surface,
+                    lemma: lemma,
+                    reading: enriched.reading,
+                    hangul: enriched.hangul,
+                    meaningKO: "",
+                    meaningEN: enriched.meaningEN,
+                    partOfSpeech: enriched.partOfSpeech
+                )
+            )
+        }
         return enriched
     }
 

@@ -28,9 +28,17 @@ nonisolated enum TokenizerService {
         "て", "た", "ない", "ん", "って", "こと", "もの"
     ]
 
+    /// Kana fragments left behind when a conjugated form is split. Never a headword on
+    /// their own, but they may still legitimately start a longer dictionary match.
+    private static let conjugationTails: Set<String> = [
+        "なり", "あり", "おり", "でき", "かけ", "つき", "いた", "てい", "して", "した",
+        "しま", "います", "ます", "ました", "ません", "れて", "られ", "せて", "つつ",
+        "とり", "なっ", "だっ", "よう", "そう", "ため"
+    ]
+
     /// How many adjacent tokenizer pieces may be joined back into one word.
-    private static let maxMergeCount = 4
-    private static let maxMergeLength = 8
+    private static let maxMergeCount = 6
+    private static let maxMergeLength = 12
 
     static func tokenRanges(in text: String) -> [TokenRange] {
         guard !text.isEmpty else { return [] }
@@ -40,6 +48,10 @@ nonisolated enum TokenizerService {
         var index = 0
 
         while index < pieces.count {
+            guard canStartWord(pieces[index]) else {
+                index += 1
+                continue
+            }
             let (token, consumed) = longestDictionaryMatch(from: index, in: pieces, text: text)
             if shouldKeep(token) {
                 result.append(token)
@@ -47,6 +59,13 @@ nonisolated enum TokenizerService {
             index += consumed
         }
         return result
+    }
+
+    /// Particles never begin a headword, but they must stay in `pieces` so that a
+    /// compound spanning one (立入禁止 over 以外) still looks contiguous.
+    private static func canStartWord(_ piece: TokenRange) -> Bool {
+        guard containsJapanese(piece.surface), !isMostlyPunctuation(piece.surface) else { return false }
+        return !stopLemmas.contains(piece.surface)
     }
 
     /// NLTokenizer splits compounds like 高校 into single characters on short OCR lines,
@@ -88,19 +107,14 @@ nonisolated enum TokenizerService {
         tokenizer.string = text
         tokenizer.setLanguage(.japanese)
 
-        let tagger = NLTagger(tagSchemes: [.lemma, .lexicalClass])
+        let tagger = NLTagger(tagSchemes: [.lemma])
         tagger.string = text
         tagger.setLanguage(.japanese, range: text.startIndex..<text.endIndex)
 
         var pieces: [TokenRange] = []
         tokenizer.enumerateTokens(in: text.startIndex..<text.endIndex) { range, _ in
             let surface = String(text[range])
-            guard containsJapanese(surface), !isMostlyPunctuation(surface) else { return true }
-
             let lemmaTag = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0
-            let lexical = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lexicalClass).0
-            guard lexical != .particle else { return true }
-
             pieces.append(
                 TokenRange(surface: surface, lemma: lemmaTag?.rawValue ?? surface, range: range)
             )
@@ -111,6 +125,9 @@ nonisolated enum TokenizerService {
 
     private static func shouldKeep(_ token: TokenRange) -> Bool {
         if stopLemmas.contains(token.lemma) || stopLemmas.contains(token.surface) {
+            return false
+        }
+        if conjugationTails.contains(token.surface) {
             return false
         }
         // Lone kana are almost always particles or leftovers from a split compound.

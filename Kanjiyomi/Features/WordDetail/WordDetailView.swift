@@ -34,8 +34,8 @@ struct WordDetailView: View {
                                     .font(KYFont.headline())
                                     .foregroundStyle(KYColor.primary)
                             }
-                            if !word.partOfSpeech.isEmpty {
-                                Text(word.partOfSpeech)
+                            if !partOfSpeech.isEmpty {
+                                Text(partOfSpeech)
                                     .font(KYFont.caption())
                                     .foregroundStyle(KYColor.textSecondary)
                             }
@@ -50,11 +50,6 @@ struct WordDetailView: View {
                             Text(word.displayMeaning)
                                 .font(KYFont.headline())
                                 .foregroundStyle(KYColor.textPrimary)
-                            if !word.meaningEN.isEmpty && word.meaningKO != word.meaningEN {
-                                Text(word.meaningEN)
-                                    .font(KYFont.caption())
-                                    .foregroundStyle(KYColor.textSecondary)
-                            }
                         }
                     }
 
@@ -112,6 +107,11 @@ struct WordDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { refreshSavedState() }
         .task { await loadExamples() }
+    }
+
+    /// JMdict labels parts of speech in English prose, which has no place on a Korean screen.
+    private var partOfSpeech: String {
+        PartOfSpeechFormatter.korean(from: word.partOfSpeech)
     }
 
     /// Examples are the bulk of what the model has to write, so they are generated here
