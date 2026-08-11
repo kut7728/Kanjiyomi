@@ -12,6 +12,9 @@ struct WordDetailView: View {
     @State private var isSaved = false
     @State private var examples: [WordExample] = []
     @State private var isLoadingExamples = false
+    @State private var didCopyJapanese = false
+    @State private var copyToastMessage: String?
+    @State private var copyToastTask: Task<Void, Never>?
 
     var body: some View {
         ZStack {
@@ -21,9 +24,24 @@ struct WordDetailView: View {
                 VStack(spacing: 16) {
                     KYCard {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(word.displayHeadword)
-                                .font(KYFont.kanji())
-                                .foregroundStyle(KYColor.textPrimary)
+                            HStack(alignment: .center, spacing: 10) {
+                                Text(word.displayHeadword)
+                                    .font(KYFont.kanji())
+                                    .foregroundStyle(KYColor.textPrimary)
+                                Button {
+                                    copyJapanese(word.displayHeadword)
+                                } label: {
+                                    Image(systemName: didCopyJapanese ? "checkmark" : "doc.on.doc")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundStyle(KYColor.primary)
+                                        .frame(width: 36, height: 36)
+                                        .background(KYColor.primary.opacity(0.12))
+                                        .clipShape(Circle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("일본어 복사")
+                                Spacer(minLength: 0)
+                            }
                             if !word.reading.isEmpty {
                                 Text(word.reading)
                                     .font(KYFont.title())
@@ -102,11 +120,41 @@ struct WordDetailView: View {
                 }
                 .padding(20)
             }
+
+            if let copyToastMessage {
+                VStack {
+                    Spacer()
+                    KYCopyToast(message: copyToastMessage)
+                        .padding(.bottom, 28)
+                }
+                .allowsHitTesting(false)
+                .transition(.opacity)
+            }
         }
+        .animation(.spring(response: 0.35, dampingFraction: 0.86), value: copyToastMessage)
         .navigationTitle("단어 상세")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { refreshSavedState() }
         .task { await loadExamples() }
+    }
+
+    private func copyJapanese(_ text: String) {
+        ClipboardCopy.copy(text)
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            didCopyJapanese = true
+            copyToastMessage = "「\(text)」 복사됨"
+        }
+        copyToastTask?.cancel()
+        copyToastTask = Task {
+            try? await Task.sleep(for: .seconds(1.4))
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
+                    didCopyJapanese = false
+                    copyToastMessage = nil
+                }
+            }
+        }
     }
 
     /// JMdict labels parts of speech in English prose, which has no place on a Korean screen.

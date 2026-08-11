@@ -12,6 +12,9 @@ struct ScanResultView: View {
     @State private var dragTranslation: CGFloat = 0
     @State private var listOffset: CGFloat = 0
     @State private var isDraggingSheet = false
+    @State private var copyToastMessage: String?
+    @State private var copyToastTask: Task<Void, Never>?
+    @State private var suppressNextRowTap = false
 
     var body: some View {
         GeometryReader { geo in
@@ -28,6 +31,15 @@ struct ScanResultView: View {
                 wordPanel(height: panelHeight, collapsed: collapsedHeight, expanded: expandedHeight)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .overlay(alignment: .bottom) {
+                if let copyToastMessage {
+                    KYCopyToast(message: copyToastMessage)
+                        .padding(.bottom, 36)
+                        .allowsHitTesting(false)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.spring(response: 0.35, dampingFraction: 0.86), value: copyToastMessage)
         }
     }
 
@@ -247,6 +259,11 @@ struct ScanResultView: View {
 
     private func wordRow(_ word: RecognizedWord) -> some View {
         Button {
+            // Long-press copy also ends with a touch-up; skip the tap that follows.
+            if suppressNextRowTap {
+                suppressNextRowTap = false
+                return
+            }
             viewModel.select(word)
             // Reveal the image instead of scrolling the page.
             withAnimation(.spring(response: 0.38, dampingFraction: 0.85)) {
@@ -288,6 +305,31 @@ struct ScanResultView: View {
             )
         }
         .buttonStyle(.plain)
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.45)
+                .onEnded { _ in
+                    suppressNextRowTap = true
+                    copyJapanese(word.displayHeadword)
+                }
+        )
+        .accessibilityHint("길게 누르면 일본어를 복사합니다")
+    }
+
+    private func copyJapanese(_ text: String) {
+        ClipboardCopy.copy(text)
+        copyToastTask?.cancel()
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
+            copyToastMessage = "「\(text)」 복사됨"
+        }
+        copyToastTask = Task {
+            try? await Task.sleep(for: .seconds(1.4))
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
+                    copyToastMessage = nil
+                }
+            }
+        }
     }
 }
 

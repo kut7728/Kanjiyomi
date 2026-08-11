@@ -177,3 +177,19 @@ private struct Triangle: Shape {
         return path
     }
 }
+
+struct KYCopyToast: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .font(KYFont.callout())
+            .foregroundStyle(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(KYColor.textPrimary.opacity(0.88))
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.12), radius: 10, y: 4)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+}
