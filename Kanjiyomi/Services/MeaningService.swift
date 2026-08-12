@@ -181,30 +181,36 @@ final class MeaningService {
                 )
             }
             let produced = await generator.meanings(for: requests)
-            guard !produced.isEmpty else { return [:] }
 
             var results: [String: MeaningResult] = [:]
             for request in requests {
                 guard let raw = produced[request.key] else { continue }
 
                 // A word JMdict has never heard of has no reading to show, and the model is
-                // the only source left. Anything that came back as something other than kana
-                // is dropped rather than romanized into nonsense.
-                let reading = request.reading.isEmpty && Self.isKanaOnly(raw.reading) ? raw.reading : ""
-                let result = MeaningResult(
+                // the only source left.
+                let reading = request.reading.isEmpty
+                    ? Self.acceptedReading(raw.reading, for: request.word)
+                    : ""
+                results[request.key] = MeaningResult(
                     meaningKO: raw.meaning,
                     reading: reading,
                     hangul: reading.isEmpty ? "" : KanaRomanizer.toHangul(reading)
                 )
-                results[request.key] = result
+            }
 
-                if let row = cacheRow(key: request.key, context: modelContext) {
+            await fillMissingReadings(for: requests, into: &results)
+            guard !results.isEmpty else { return [:] }
+
+            for (key, result) in results {
+                guard let row = cacheRow(key: key, context: modelContext) else { continue }
+                // A reading-only answer must not blank out a meaning already stored.
+                if !result.meaningKO.isEmpty {
                     row.meaningKO = result.meaningKO
                     row.meaningSource = WordCache.MeaningSource.foundation.rawValue
-                    if !result.reading.isEmpty {
-                        row.reading = result.reading
-                        row.hangul = result.hangul
-                    }
+                }
+                if !result.reading.isEmpty {
+                    row.reading = result.reading
+                    row.hangul = result.hangul
                 }
             }
             try? modelContext.save()
@@ -213,6 +219,47 @@ final class MeaningService {
         #endif
         return [:]
     }
+
+    #if canImport(FoundationModels)
+    /// Asks again, on its own, for the readings the combined pass failed to produce.
+    ///
+    /// Filling in a meaning and a reading in one answer is more than the on-device model
+    /// reliably manages: it drops entries, and it answers with the word instead of its kana.
+    /// A second pass that asks for nothing but readings recovers most of those.
+    @available(iOS 26.0, *)
+    private func fillMissingReadings(
+        for requests: [MeaningRequest],
+        into results: inout [String: MeaningResult]
+    ) async {
+        let missing = requests.filter { request in
+            request.reading.isEmpty && (results[request.key]?.reading.isEmpty ?? true)
+        }
+        guard !missing.isEmpty else { return }
+
+        let produced = await generator.readings(for: missing.map(\.word))
+        guard !produced.isEmpty else { return }
+
+        for request in missing {
+            let reading = Self.acceptedReading(produced[request.word] ?? "", for: request.word)
+            guard !reading.isEmpty else { continue }
+            let hangul = KanaRomanizer.toHangul(reading)
+
+            if var existing = results[request.key] {
+                existing.reading = reading
+                existing.hangul = hangul
+                results[request.key] = existing
+            } else {
+                // The meaning pass lost this word entirely, but furigana is still worth
+                // showing on its own.
+                results[request.key] = MeaningResult(
+                    meaningKO: "",
+                    reading: reading,
+                    hangul: hangul
+                )
+            }
+        }
+    }
+    #endif
 
     /// Writes a ChatGPT pass into the cache, replacing whatever was stored before.
     ///
@@ -326,14 +373,49 @@ final class MeaningService {
         text.unicodeScalars.contains { (0xAC00...0xD7A3).contains($0.value) }
     }
 
-    /// Shared with the remote generator, which has to apply the same test to what it gets back.
-    nonisolated static func isKanaOnly(_ text: String) -> Bool {
-        !text.isEmpty && text.unicodeScalars.allSatisfy { scalar in
-            let v = scalar.value
-            return (0x3040...0x309F).contains(v)
-                || (0x30A0...0x30FF).contains(v)
-                || v == 0x30FC // prolonged sound mark
+    private nonisolated static func isKanaOnly(_ text: String) -> Bool {
+        !text.isEmpty && text.unicodeScalars.allSatisfy(isKana)
+    }
+
+    /// What a model offered as a reading, once salvaged and sanity-checked.
+    ///
+    /// Rejecting anything that is not already clean kana threw away usable answers: the
+    /// on-device model often replies with the kana wrapped in the word it was asked about.
+    nonisolated static func acceptedReading(_ raw: String, for word: String) -> String {
+        // The earliest run that could actually be the reading. Order matters: when the model
+        // lists alternatives it gives the intended one first, so the longest is the wrong
+        // pick. Skipping runs that are merely part of the word is what leaves `ごりよう`
+        // behind in an answer like `ご利用（ごりよう）`.
+        kanaRuns(in: raw).first { isPlausibleReading($0, for: word) } ?? ""
+    }
+
+    private nonisolated static func kanaRuns(in text: String) -> [String] {
+        var runs: [String] = []
+        var run = ""
+        for scalar in text.unicodeScalars {
+            if isKana(scalar) {
+                run.unicodeScalars.append(scalar)
+                continue
+            }
+            if !run.isEmpty { runs.append(run) }
+            run = ""
         }
+        if !run.isEmpty { runs.append(run) }
+        return runs
+    }
+
+    /// Catches the model echoing the word back, where extraction leaves only the kana that
+    /// were already part of it: `ご` is not the reading of `ご利用`.
+    private nonisolated static func isPlausibleReading(_ kana: String, for word: String) -> Bool {
+        guard !kana.isEmpty, kana != word else { return false }
+        return !word.contains(kana) || kana.count >= word.count
+    }
+
+    private nonisolated static func isKana(_ scalar: Unicode.Scalar) -> Bool {
+        let v = scalar.value
+        return (0x3040...0x309F).contains(v)
+            || (0x30A0...0x30FF).contains(v)
+            || v == 0x30FC // prolonged sound mark
     }
 }
 
@@ -348,6 +430,13 @@ private final class MeaningGenerator {
     Write the reading in hiragana only, never in kanji or romaji.
     Always answer in Korean. Never answer in English.
     Keep each meaning under 20 Korean characters.
+    """
+
+    private static let readingInstructions = """
+    You write how Japanese words are read.
+    Answer in hiragana only. Never use kanji, katakana, romaji or any other script.
+    Never give the word itself back as its reading.
+    Return one entry for every word you are given, in the same order.
     """
 
     private static let segmentInstructions = """
@@ -475,6 +564,45 @@ private final class MeaningGenerator {
         }
     }
 
+    /// Readings alone, for the words the combined pass could not manage.
+    func readings(for words: [String]) async -> [String: String] {
+        guard !words.isEmpty, SystemLanguageModel.default.isAvailable else { return [:] }
+
+        // A dedicated session: the meaning transcript pushes this toward answering in Korean.
+        let session = LanguageModelSession(instructions: Self.readingInstructions)
+        let prompt = """
+        Write the hiragana reading of each of these \(words.count) Japanese words.
+        \(words.map { "- \($0)" }.joined(separator: "\n"))
+        """
+
+        do {
+            let response = try await session.respond(
+                to: prompt,
+                generating: GeneratedReadingList.self,
+                options: GenerationOptions(
+                    sampling: .greedy,
+                    maximumResponseTokens: 60 * words.count
+                )
+            )
+            let items = response.content.items
+            var byWord = Dictionary(
+                items.map { ($0.word, $0.reading) },
+                uniquingKeysWith: { first, _ in first }
+            )
+
+            // Position covers the entries the model rewrote instead of echoing back.
+            if items.count == words.count {
+                for (word, item) in zip(words, items) where byWord[word] == nil {
+                    byWord[word] = item.reading
+                }
+            }
+            return byWord
+        } catch {
+            print("[MeaningService] reading batch failed: \(error)")
+            return [:]
+        }
+    }
+
     func examples(word: String, reading: String, meaning: String) async -> [WordExample] {
         guard SystemLanguageModel.default.isAvailable else { return [] }
 
@@ -557,6 +685,23 @@ private struct GeneratedMeaning {
     var meaning: String
 
     @Guide(description: "How the word is read, in hiragana only")
+    var reading: String
+}
+
+@available(iOS 26.0, *)
+@Generable(description: "Hiragana readings for a list of Japanese words")
+private struct GeneratedReadingList {
+    @Guide(description: "One entry for every word that was given, in the same order")
+    var items: [GeneratedReading]
+}
+
+@available(iOS 26.0, *)
+@Generable
+private struct GeneratedReading {
+    @Guide(description: "The Japanese word, copied exactly as it was given")
+    var word: String
+
+    @Guide(description: "How that word is read, in hiragana only")
     var reading: String
 }
 

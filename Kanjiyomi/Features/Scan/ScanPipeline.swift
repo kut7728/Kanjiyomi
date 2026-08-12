@@ -178,7 +178,10 @@ enum ScanPipeline {
         for index in indices {
             let key = WordCache.makeKey(surface: words[index].surface, lemma: words[index].lemma)
             guard let result = generated[key] else { continue }
-            words[index].meaningKO = result.meaningKO
+            // A pass that recovered only the reading must leave the meaning alone.
+            if !result.meaningKO.isEmpty {
+                words[index].meaningKO = result.meaningKO
+            }
             // Only words the dictionary could not place come back with a reading.
             if words[index].reading.isEmpty, !result.reading.isEmpty {
                 words[index].reading = result.reading

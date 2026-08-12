@@ -170,6 +170,7 @@ final class OpenAIService {
         // Matching on the echoed word rather than position survives a dropped entry.
         let keysByWord = Dictionary(requests.map { ($0.word, $0.key) }) { first, _ in first }
         let readingsByKey = Dictionary(requests.map { ($0.key, $0.reading) }) { first, _ in first }
+        let wordsByKey = Dictionary(requests.map { ($0.key, $0.word) }) { first, _ in first }
 
         let parsed: MeaningPayload
         do {
@@ -199,11 +200,12 @@ final class OpenAIService {
             else { continue }
 
             // A word JMdict has never heard of has no reading to show, and the model is the
-            // only source left. Anything that came back as something other than kana is
-            // dropped rather than romanized into nonsense.
-            let candidate = item.reading.trimmingCharacters(in: .whitespacesAndNewlines)
+            // only source left. Kana is salvaged out of the answer, and anything that leaves
+            // no kana behind is dropped rather than romanized into nonsense.
             let needsReading = readingsByKey[key]?.isEmpty ?? false
-            let reading = needsReading && MeaningService.isKanaOnly(candidate) ? candidate : ""
+            let reading = needsReading
+                ? MeaningService.acceptedReading(item.reading, for: wordsByKey[key] ?? item.word)
+                : ""
             results[key] = MeaningResult(
                 meaningKO: meaning,
                 reading: reading,
