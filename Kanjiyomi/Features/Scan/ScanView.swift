@@ -21,14 +21,11 @@ struct ScanView: View {
     /// user, so it has to be asked for rather than quietly becoming the default.
     @AppStorage("wordSegmentation") private var defaultMode: SegmentationMode = .dictionary
 
-    /// The mode the photo on screen was read with, including a one-off ChatGPT run. Cleared
-    /// for every new photo so a paid pass never repeats without being asked for.
-    @State private var sessionMode: SegmentationMode?
-
-    /// Resolved so deleting the API key returns the picker to the dictionary rather than
-    /// leaving it on a mode the device can no longer run.
+    /// Read from the words on screen rather than from this view's own state. Switching tabs
+    /// can rebuild this view, and a remembered selection here would reset while the results
+    /// it described stayed put, leaving the menu describing a pass that never happened.
     private var activeMode: SegmentationMode {
-        (sessionMode ?? defaultMode).resolved
+        viewModel.activeMode
     }
 
     private var onDeviceModes: [SegmentationMode] {
@@ -111,7 +108,6 @@ struct ScanView: View {
             .onChange(of: pickedImage) { _, newValue in
                 guard let newValue else { return }
                 viewModel.image = newValue
-                sessionMode = nil
                 Task {
                     await viewModel.process(mode: defaultMode, modelContext: modelContext)
                 }
@@ -135,7 +131,6 @@ struct ScanView: View {
 
     private func select(_ mode: SegmentationMode) {
         guard mode != activeMode else { return }
-        sessionMode = mode
         // Remembering ChatGPT would mean the next photo silently costs money.
         if mode != .openAI {
             defaultMode = mode

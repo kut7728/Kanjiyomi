@@ -71,10 +71,11 @@ struct ContentView: View {
         }
     }
 
-    /// Only on the scan tab: saving results from a photo the user cannot currently see
-    /// would be an odd thing to be offered while reading the vocabulary list.
+    /// Not restricted to the scan tab. An unsaved ChatGPT pass was paid for and is thrown
+    /// away by the next scan, so the chance to keep it should follow the user rather than
+    /// disappear the moment they look at something else.
     private var showsSavePrompt: Bool {
-        selection == .scan && scanViewModel.hasUnsavedOpenAIMeanings
+        scanViewModel.hasUnsavedOpenAIMeanings
     }
 
     private var tabContent: some View {

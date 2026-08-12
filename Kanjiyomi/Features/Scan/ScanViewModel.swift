@@ -25,8 +25,18 @@ final class ScanViewModel {
     /// whether those meanings are waiting to be saved.
     private(set) var activeMode: SegmentationMode = .dictionary
 
-    /// A finished ChatGPT pass that has not been written to the cache yet.
-    private(set) var hasUnsavedOpenAIMeanings = false
+    /// Derived rather than stored. A stored flag has to be set by whichever code path
+    /// happens to finish last, and a cancelled generation task never reaches that line,
+    /// which left results on screen with no way to keep them.
+    var hasUnsavedOpenAIMeanings: Bool {
+        activeMode == .openAI
+            && !savedCurrentPass
+            && !isProcessing
+            && !isGeneratingMeanings
+            && words.contains { !$0.meaningKO.isEmpty }
+    }
+
+    private var savedCurrentPass = false
 
     /// Where the save prompt is shown. The tab bar accessory keeps it visible no matter how
     /// far the word list is scrolled, but it only exists on iOS 26, so older systems fall
@@ -58,7 +68,7 @@ final class ScanViewModel {
         selectedWordID = nil
         showDetailWord = nil
         activeMode = mode.resolved
-        hasUnsavedOpenAIMeanings = false
+        savedCurrentPass = false
 
         let rescanned: [RecognizedWord]
         do {
@@ -87,6 +97,8 @@ final class ScanViewModel {
 
         words = rescanned
         currentRecord?.update(words: words)
+        currentRecord?.segmentation = activeMode
+        currentRecord?.meaningsSaved = false
         try? modelContext.save()
         startMeaningGeneration(modelContext: modelContext)
     }
@@ -106,7 +118,7 @@ final class ScanViewModel {
         words = []
         selectedWordID = nil
         activeMode = mode.resolved
-        hasUnsavedOpenAIMeanings = false
+        savedCurrentPass = false
 
         // Loading the model now overlaps its cold start with OCR.
         MeaningService.shared.prewarm()
@@ -144,10 +156,15 @@ final class ScanViewModel {
         selectedWordID = nil
         errorMessage = nil
         showDetailWord = nil
-        // Reopening a scan never re-runs a paid pass; anything still missing is filled in
-        // by whatever runs on the device.
-        activeMode = .dictionary
-        hasUnsavedOpenAIMeanings = false
+        // The cancel above leaves this set if a previous scan was still generating, which
+        // would suppress the save offer this scan is entitled to.
+        isGeneratingMeanings = false
+        activeMode = record.segmentation
+        savedCurrentPass = record.meaningsSaved
+
+        // Reopening must never spend the user's money on its own. A ChatGPT scan is shown
+        // exactly as it was stored, and its save offer comes back with it.
+        guard activeMode != .openAI else { return }
         // A scan left before generation finished still has words without a Korean meaning.
         startMeaningGeneration(modelContext: modelContext)
     }
@@ -156,8 +173,9 @@ final class ScanViewModel {
     func saveOpenAIMeanings(modelContext: ModelContext) {
         MeaningService.shared.persistOpenAIMeanings(words, modelContext: modelContext)
         currentRecord?.update(words: words)
+        currentRecord?.meaningsSaved = true
         try? modelContext.save()
-        hasUnsavedOpenAIMeanings = false
+        savedCurrentPass = true
     }
 
     /// Runs alongside the visible list, replacing it batch by batch as meanings come back.
@@ -185,10 +203,6 @@ final class ScanViewModel {
             if mode == .openAI, let message = OpenAIService.shared.lastErrorMessage {
                 self.errorMessage = message
             }
-            // ChatGPT results are not cached until asked for, so the offer to keep them
-            // only makes sense once something was actually produced.
-            self.hasUnsavedOpenAIMeanings = mode == .openAI
-                && self.words.contains { !$0.meaningKO.isEmpty }
             self.currentRecord?.update(words: self.words)
             try? modelContext.save()
         }
@@ -201,7 +215,11 @@ final class ScanViewModel {
     }
 
     private func saveRecord(image: UIImage, modelContext: ModelContext) -> ScanRecord? {
-        guard let record = ScanRecord(image: image, words: words) else { return nil }
+        guard let record = ScanRecord(
+            image: image,
+            words: words,
+            segmentation: activeMode
+        ) else { return nil }
         modelContext.insert(record)
         try? modelContext.save()
         return record
@@ -224,6 +242,6 @@ final class ScanViewModel {
         errorMessage = nil
         showDetailWord = nil
         activeMode = .dictionary
-        hasUnsavedOpenAIMeanings = false
+        savedCurrentPass = false
     }
 }
