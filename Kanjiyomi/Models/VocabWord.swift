@@ -21,6 +21,10 @@ final class VocabWord {
     var exampleKO1: String
     var exampleJP2: String
     var exampleKO2: String
+    /// The scan this word most recently turned up in, so the photo it came from can be
+    /// reopened. Nil on words saved before this was tracked and on words added straight from
+    /// the dictionary search, which never came out of a photo.
+    var scanRecordID: UUID?
     var createdAt: Date
 
     init(
@@ -36,6 +40,7 @@ final class VocabWord {
         exampleKO1: String = "",
         exampleJP2: String = "",
         exampleKO2: String = "",
+        scanRecordID: UUID? = nil,
         createdAt: Date = .now
     ) {
         self.id = id
@@ -50,6 +55,7 @@ final class VocabWord {
         self.exampleKO1 = exampleKO1
         self.exampleJP2 = exampleJP2
         self.exampleKO2 = exampleKO2
+        self.scanRecordID = scanRecordID
         self.createdAt = createdAt
     }
 
@@ -74,7 +80,7 @@ final class VocabWord {
         return result
     }
 
-    convenience init(from word: RecognizedWord) {
+    convenience init(from word: RecognizedWord, scanRecordID: UUID? = nil) {
         let ex = word.examples
         self.init(
             surface: word.surface,
@@ -87,7 +93,8 @@ final class VocabWord {
             exampleJP1: ex.count > 0 ? ex[0].japanese : "",
             exampleKO1: ex.count > 0 ? ex[0].korean : "",
             exampleJP2: ex.count > 1 ? ex[1].japanese : "",
-            exampleKO2: ex.count > 1 ? ex[1].korean : ""
+            exampleKO2: ex.count > 1 ? ex[1].korean : "",
+            scanRecordID: scanRecordID
         )
     }
 

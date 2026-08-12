@@ -16,7 +16,11 @@ enum VocabularyStore {
     /// is nothing to study. Words already saved are only ever filled in, never rewritten,
     /// so a later scan can supply a missing reading without changing a meaning the user
     /// has been learning from.
-    static func absorb(_ words: [RecognizedWord], modelContext: ModelContext) {
+    static func absorb(
+        _ words: [RecognizedWord],
+        from scanRecordID: UUID?,
+        modelContext: ModelContext
+    ) {
         let candidates = words.filter { !$0.meaningKO.isEmpty && !$0.displayHeadword.isEmpty }
         guard !candidates.isEmpty else { return }
 
@@ -35,8 +39,12 @@ enum VocabularyStore {
             let key = key(for: word)
             if let existing = index[key] {
                 fillGaps(in: existing, from: word)
+                // Repointed rather than filled in, unlike the fields above: the newest photo
+                // showing the word is the one worth going back to, and a scan that failed to
+                // be stored has nothing better to offer than the link already there.
+                if let scanRecordID { existing.scanRecordID = scanRecordID }
             } else {
-                let entry = VocabWord(from: word)
+                let entry = VocabWord(from: word, scanRecordID: scanRecordID)
                 modelContext.insert(entry)
                 index[key] = entry
             }

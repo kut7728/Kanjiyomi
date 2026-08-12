@@ -3,6 +3,7 @@
 //  Kanjiyomi
 //
 
+import SwiftData
 import SwiftUI
 
 struct ContentView: View {
@@ -11,6 +12,7 @@ struct ContentView: View {
     /// Held here rather than inside the scan screen so the tab bar accessory, which is
     /// attached to this tab view, can read and act on the pending save.
     @State private var scanViewModel = ScanViewModel()
+    @State private var scanRouter = ScanRouter()
     @State private var selection: TabID = .scan
     @State private var confirmingSave = false
 
@@ -24,6 +26,10 @@ struct ContentView: View {
             // The palette is a fixed light theme, so dark mode would render titles white on
             // light gray.
             .preferredColorScheme(.light)
+            .environment(scanRouter)
+            .onChange(of: scanRouter.request) { _, request in
+                if let request { reveal(request) }
+            }
             .confirmationDialog(
                 "ChatGPT가 만든 뜻을 저장할까요?",
                 isPresented: $confirmingSave,
@@ -96,6 +102,21 @@ struct ContentView: View {
                 SettingsView()
             }
         }
+    }
+
+    /// A word detail can be opened from any tab, so the way back to the photo it came from is
+    /// walked here, where both the tab selection and the shared scan view model are in reach.
+    private func reveal(_ request: ScanRouter.Request) {
+        scanRouter.clear()
+        guard let record = scanRouter.record(request.recordID, modelContext: modelContext) else {
+            return
+        }
+        selection = .scan
+        scanViewModel.load(record, modelContext: modelContext)
+        guard let word = scanViewModel.words.first(where: {
+            WordCache.makeKey(surface: $0.surface, lemma: $0.lemma) == request.wordKey
+        }) else { return }
+        scanViewModel.select(word)
     }
 }
 

@@ -9,7 +9,12 @@ import SwiftUI
 struct WordDetailView: View {
     let word: RecognizedWord
     @Environment(\.modelContext) private var modelContext
+    /// Absent wherever this screen is shown outside the tab view, and then there is no scan
+    /// tab to send the user to either.
+    @Environment(ScanRouter.self) private var scanRouter: ScanRouter?
+    @Environment(\.dismiss) private var dismiss
     @State private var isSaved = false
+    @State private var originScan: ScanRecord?
     @State private var examples: [WordExample] = []
     @State private var isLoadingExamples = false
     @State private var didCopyJapanese = false
@@ -106,6 +111,12 @@ struct WordDetailView: View {
                         }
                     }
 
+                    if let originScan {
+                        KYSecondaryButton("이 단어가 나온 스캔 보기", systemImage: "text.viewfinder") {
+                            openScan(originScan)
+                        }
+                    }
+
                     if isSaved {
                         Text("단어장에 저장됨")
                             .font(KYFont.callout())
@@ -185,7 +196,24 @@ struct WordDetailView: View {
             predicate: #Predicate { $0.lemma == lemma && $0.surface == surface }
         )
         descriptor.fetchLimit = 1
-        isSaved = (try? modelContext.fetch(descriptor).first) != nil
+        let saved = try? modelContext.fetch(descriptor).first
+        isSaved = saved != nil
+        guard let scanRecordID = saved?.scanRecordID else {
+            originScan = nil
+            return
+        }
+        originScan = scanRouter?.record(scanRecordID, modelContext: modelContext)
+    }
+
+    /// The scan sits on another tab, so switching to it is left to the tab view and this
+    /// screen only names the scan and the word to point at. Popped first so the tab switch
+    /// does not leave this page pushed behind it.
+    private func openScan(_ record: ScanRecord) {
+        dismiss()
+        scanRouter?.reveal(
+            recordID: record.id,
+            wordKey: WordCache.makeKey(surface: word.surface, lemma: word.lemma)
+        )
     }
 
     private func saveToVocabulary() {

@@ -222,7 +222,7 @@ final class ScanViewModel {
     /// would otherwise restore words the user has deliberately deleted from their list.
     private func fileIntoVocabulary(modelContext: ModelContext) {
         guard currentRecord?.vocabularyAdded != true else { return }
-        VocabularyStore.absorb(words, modelContext: modelContext)
+        VocabularyStore.absorb(words, from: currentRecord?.id, modelContext: modelContext)
         currentRecord?.vocabularyAdded = true
         try? modelContext.save()
     }
