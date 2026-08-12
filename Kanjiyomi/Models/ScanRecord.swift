@@ -21,6 +21,9 @@ final class ScanRecord {
     /// Whether a ChatGPT pass in this scan was written to the word cache. Kept with the scan
     /// so the offer to save it survives leaving the screen.
     var meaningsSaved: Bool = false
+    /// Whether these words have been filed into the vocabulary. Recorded so reopening an old
+    /// scan cannot bring back words the user has since deleted from their list.
+    var vocabularyAdded: Bool = false
     var createdAt: Date
 
     init(

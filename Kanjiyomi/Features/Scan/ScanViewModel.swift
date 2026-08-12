@@ -99,6 +99,9 @@ final class ScanViewModel {
         currentRecord?.update(words: words)
         currentRecord?.segmentation = activeMode
         currentRecord?.meaningsSaved = false
+        // A different split finds different words, so this pass gets its own turn at the
+        // vocabulary.
+        currentRecord?.vocabularyAdded = false
         try? modelContext.save()
         startMeaningGeneration(modelContext: modelContext)
     }
@@ -184,7 +187,11 @@ final class ScanViewModel {
         let canGenerate = mode == .openAI
             ? OpenAIService.shared.isConfigured
             : MeaningService.shared.isGenerationAvailable
-        guard canGenerate, words.contains(where: \.needsGeneration) else { return }
+        guard canGenerate, words.contains(where: \.needsGeneration) else {
+            // Nothing left to generate, so the dictionary pass is already the final answer.
+            fileIntoVocabulary(modelContext: modelContext)
+            return
+        }
 
         let snapshot = words
         isGeneratingMeanings = true
@@ -205,7 +212,19 @@ final class ScanViewModel {
             }
             self.currentRecord?.update(words: self.words)
             try? modelContext.save()
+            self.fileIntoVocabulary(modelContext: modelContext)
         }
+    }
+
+    /// Every recognized word joins the vocabulary once its meaning has settled.
+    ///
+    /// Gated on the scan rather than run on every appearance, because reopening an old scan
+    /// would otherwise restore words the user has deliberately deleted from their list.
+    private func fileIntoVocabulary(modelContext: ModelContext) {
+        guard currentRecord?.vocabularyAdded != true else { return }
+        VocabularyStore.absorb(words, modelContext: modelContext)
+        currentRecord?.vocabularyAdded = true
+        try? modelContext.save()
     }
 
     private func applyMeanings(_ updated: [RecognizedWord]) {
