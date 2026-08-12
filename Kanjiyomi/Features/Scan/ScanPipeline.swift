@@ -128,31 +128,62 @@ enum ScanPipeline {
         // A round trip costs far more than a longer prompt, so the remote model is asked
         // for more words at once than the on-device one.
         let batchSize = usesOpenAI ? openAIMeaningBatchSize : meaningBatchSize
-        for batch in pending.chunked(into: batchSize) {
-            if Task.isCancelled { return }
+        let batches = pending.chunked(into: batchSize)
 
-            let generated = usesOpenAI
-                ? await OpenAIService.shared.generateMeanings(for: batch.map { current[$0] })
-                : await MeaningService.shared.generateMeanings(
+        guard usesOpenAI else {
+            // One local model answers every request, so overlapping them only queues them.
+            for batch in batches {
+                if Task.isCancelled { return }
+                let generated = await MeaningService.shared.generateMeanings(
                     for: batch.map { current[$0] },
                     modelContext: modelContext
                 )
-            guard !generated.isEmpty else { continue }
+                guard !generated.isEmpty else { continue }
+                apply(generated, to: batch, in: &current)
+                onUpdate(current)
+            }
+            return
+        }
 
-            for index in batch {
-                let key = WordCache.makeKey(
-                    surface: current[index].surface,
-                    lemma: current[index].lemma
-                )
-                guard let result = generated[key] else { continue }
-                current[index].meaningKO = result.meaningKO
-                // Only words the dictionary could not place come back with a reading.
-                if current[index].reading.isEmpty, !result.reading.isEmpty {
-                    current[index].reading = result.reading
-                    current[index].hangul = result.hangul
+        // Remote batches are independent round trips of similar length, so issuing them
+        // together bills the same as issuing them one by one but finishes in the time of
+        // the slowest rather than the sum.
+        await withTaskGroup(
+            of: (indices: [Int], generated: [String: MeaningResult]).self
+        ) { group in
+            for batch in batches {
+                let payload = batch.map { current[$0] }
+                group.addTask {
+                    (batch, await OpenAIService.shared.generateMeanings(for: payload))
                 }
             }
-            onUpdate(current)
+
+            for await batch in group {
+                if Task.isCancelled {
+                    group.cancelAll()
+                    return
+                }
+                guard !batch.generated.isEmpty else { continue }
+                apply(batch.generated, to: batch.indices, in: &current)
+                onUpdate(current)
+            }
+        }
+    }
+
+    private static func apply(
+        _ generated: [String: MeaningResult],
+        to indices: [Int],
+        in words: inout [RecognizedWord]
+    ) {
+        for index in indices {
+            let key = WordCache.makeKey(surface: words[index].surface, lemma: words[index].lemma)
+            guard let result = generated[key] else { continue }
+            words[index].meaningKO = result.meaningKO
+            // Only words the dictionary could not place come back with a reading.
+            if words[index].reading.isEmpty, !result.reading.isEmpty {
+                words[index].reading = result.reading
+                words[index].hangul = result.hangul
+            }
         }
     }
 }

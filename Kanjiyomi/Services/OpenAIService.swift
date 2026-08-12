@@ -16,8 +16,16 @@ import Foundation
 final class OpenAIService {
     static let shared = OpenAIService()
 
-    static let defaultModel = "gpt-5.6"
+    /// The `gpt-5.6` alias routes to Sol, the frontier tier, which spends far more time
+    /// thinking than splitting words and glossing them needs. Luna is the fast tier and
+    /// still comfortably handles both.
+    static let defaultModel = "gpt-5.6-luna"
     static let modelDefaultsKey = "openAIModel"
+
+    /// Omitting this leaves the model at its `medium` default, which added tens of seconds
+    /// to every scan. Both tasks here are pattern work with a fixed answer shape, so light
+    /// reasoning is enough.
+    private static let reasoningEffort = "low"
 
     private static let endpoint = URL(string: "https://api.openai.com/v1/chat/completions")!
 
@@ -224,6 +232,7 @@ final class OpenAIService {
     ) async throws -> Payload {
         let body: [String: Any] = [
             "model": model,
+            "reasoning_effort": Self.reasoningEffort,
             "messages": [
                 ["role": "system", "content": instructions],
                 ["role": "user", "content": prompt]
