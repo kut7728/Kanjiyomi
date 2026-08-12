@@ -225,9 +225,11 @@ final class ScanViewModel {
         return record
     }
 
+    /// Tapping the word already selected drops the selection, which is the only way back to
+    /// the whole photo.
     func select(_ word: RecognizedWord) {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-            selectedWordID = word.id
+            selectedWordID = selectedWordID == word.id ? nil : word.id
         }
     }
 

@@ -11,7 +11,9 @@ struct ScanResultView: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    @State private var isExpanded = false
+    /// The list opens over the whole screen. The photo is only worth room once there is a
+    /// word to point at, and by then it is magnified rather than shown whole.
+    @State private var isExpanded = true
     @State private var dragTranslation: CGFloat = 0
     @State private var listOffset: CGFloat = 0
     @State private var isDraggingSheet = false
@@ -25,11 +27,21 @@ struct ScanResultView: View {
     private static let tabBarClearance: CGFloat = 88
     private static let accessoryClearance: CGFloat = 60
 
+    /// What the list keeps once a word is selected. The strip left over is narrow, which is
+    /// why the photo is magnified into it instead of being shown whole.
+    private static let selectedSheetFraction: CGFloat = 0.6
+
+    /// Room left around the word inside the magnified strip.
+    private static let zoomPadding: CGFloat = 28
+
+    /// Past this the stored photo has no detail left to reveal.
+    private static let maxZoom: CGFloat = 6
+
     var body: some View {
         GeometryReader { geo in
             let clearance = Self.tabBarClearance
             let usableHeight = max(geo.size.height - clearance, 0)
-            let collapsedHeight = usableHeight * 0.42 + clearance
+            let collapsedHeight = usableHeight * Self.selectedSheetFraction + clearance
             let expandedHeight = geo.size.height
             let panelHeight = resolvedHeight(
                 collapsed: collapsedHeight,
@@ -53,6 +65,15 @@ struct ScanResultView: View {
             .animation(.spring(response: 0.35, dampingFraction: 0.86), value: copyToastMessage)
         }
         .ignoresSafeArea(.container, edges: .bottom)
+        // Keyed on the scan rather than the selection: clearing the selection by tapping the
+        // selected word again is how the user asks for the whole photo, so the list has to
+        // stay out of the way then.
+        .onChange(of: viewModel.words.first?.id) {
+            guard !isExpanded else { return }
+            withAnimation(.spring(response: 0.38, dampingFraction: 0.85)) {
+                isExpanded = true
+            }
+        }
     }
 
     /// Rows have to clear the strip the tab bar sits in, plus the save accessory when it
@@ -74,73 +95,175 @@ struct ScanResultView: View {
     private func imageLayer(height: CGFloat) -> some View {
         Group {
             if let image = viewModel.image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: max(height, 160))
-                    .overlay {
-                        highlightOverlay(imageSize: image.size)
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                GeometryReader { geo in
+                    let zoom = imageZoom(imageSize: image.size, displaySize: geo.size)
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .scaleEffect(zoom.scale, anchor: .center)
+                        .offset(
+                            x: (geo.size.width / 2 - zoom.focus.x) * zoom.scale,
+                            y: (geo.size.height / 2 - zoom.focus.y) * zoom.scale
+                        )
+                        // Attached after the magnification so the outline and the bubble are
+                        // placed by hand rather than blown up with the pixels.
+                        .overlay {
+                            highlightOverlay(
+                                imageSize: image.size,
+                                displaySize: geo.size,
+                                zoom: zoom
+                            )
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .animation(
+                            .spring(response: 0.42, dampingFraction: 0.86),
+                            value: viewModel.selectedWordID
+                        )
+                }
+                .frame(height: max(height, 160))
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
+    /// How far to magnify the photo so the selected word is readable in the strip the list
+    /// leaves behind. Showing the whole photo there would make every word too small, and
+    /// giving the photo more room is what left the list cramped in the first place.
+    private func imageZoom(imageSize: CGSize, displaySize: CGSize) -> ImageZoom {
+        let center = CGPoint(x: displaySize.width / 2, y: displaySize.height / 2)
+        let identity = ImageZoom(scale: 1, focus: center)
+        guard let word = viewModel.selectedWord else { return identity }
+
+        let corners = word.quads.flatMap {
+            fittedCorners($0, imageSize: imageSize, displaySize: displaySize)
+        }
+        guard !corners.isEmpty else { return identity }
+
+        let box = boundingRect(of: corners)
+            .insetBy(dx: -Self.zoomPadding, dy: -Self.zoomPadding)
+        guard box.width > 0, box.height > 0 else { return identity }
+
+        let fit = min(displaySize.width / box.width, displaySize.height / box.height)
+        let scale = min(fit, Self.maxZoom)
+        guard scale > 1 else { return identity }
+
+        // Words near an edge would otherwise pan the letterboxing into view.
+        let photo = fittedRect(imageSize: imageSize, displaySize: displaySize)
+        let window = CGSize(width: displaySize.width / scale, height: displaySize.height / scale)
+        return ImageZoom(
+            scale: scale,
+            focus: CGPoint(
+                x: clamped(
+                    box.midX,
+                    between: photo.minX + window.width / 2,
+                    and: photo.maxX - window.width / 2,
+                    otherwise: photo.midX
+                ),
+                y: clamped(
+                    box.midY,
+                    between: photo.minY + window.height / 2,
+                    and: photo.maxY - window.height / 2,
+                    otherwise: photo.midY
+                )
+            )
+        )
+    }
+
+    private func clamped(
+        _ value: CGFloat,
+        between lower: CGFloat,
+        and upper: CGFloat,
+        otherwise fallback: CGFloat
+    ) -> CGFloat {
+        // The window is wider than the photo, so there is nothing to pan along this axis.
+        guard lower <= upper else { return fallback }
+        return min(max(value, lower), upper)
+    }
+
     @ViewBuilder
-    private func highlightOverlay(imageSize: CGSize) -> some View {
-        GeometryReader { geo in
-            let displaySize = geo.size
-            ZStack(alignment: .topLeading) {
-                if let word = viewModel.selectedWord {
-                    let shapes = word.quads.map { quad in
-                        mappedCorners(quad, imageSize: imageSize, displaySize: displaySize)
-                    }
+    private func highlightOverlay(
+        imageSize: CGSize,
+        displaySize: CGSize,
+        zoom: ImageZoom
+    ) -> some View {
+        ZStack(alignment: .topLeading) {
+            if let word = viewModel.selectedWord {
+                let shapes = word.quads.map { quad in
+                    mappedCorners(
+                        quad,
+                        imageSize: imageSize,
+                        displaySize: displaySize,
+                        zoom: zoom
+                    )
+                }
 
-                    ForEach(Array(shapes.enumerated()), id: \.offset) { _, corners in
-                        QuadShape(corners: corners)
-                            .fill(KYColor.highlight)
-                            .overlay(
-                                QuadShape(corners: corners)
-                                    .stroke(KYColor.highlightBorder, lineWidth: 2)
-                            )
-                            .transition(.opacity)
-                    }
+                ForEach(Array(shapes.enumerated()), id: \.offset) { _, corners in
+                    QuadShape(corners: corners)
+                        .fill(KYColor.highlight)
+                        .overlay(
+                            QuadShape(corners: corners)
+                                .stroke(KYColor.highlightBorder, lineWidth: 2)
+                        )
+                        .transition(.opacity)
+                }
 
-                    if let anchor = shapes.first {
-                        let bounds = boundingRect(of: anchor)
-                        SpeechBubble(text: word.displayMeaning) {
-                            viewModel.showDetailWord = word
-                        }
-                        .position(x: bounds.midX, y: max(28, bounds.minY - 28))
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                if let anchor = shapes.first {
+                    let bounds = boundingRect(of: anchor)
+                    SpeechBubble(text: word.displayMeaning) {
+                        viewModel.showDetailWord = word
                     }
+                    .position(x: bounds.midX, y: max(28, bounds.minY - 28))
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.4, dampingFraction: 0.82), value: viewModel.selectedWordID)
         }
+        .animation(.spring(response: 0.4, dampingFraction: 0.82), value: viewModel.selectedWordID)
+    }
+
+    /// Where the photo lands inside its frame once fitted, before any magnification.
+    private func fittedRect(imageSize: CGSize, displaySize: CGSize) -> CGRect {
+        guard imageSize.width > 0, imageSize.height > 0 else { return .zero }
+        let scale = min(displaySize.width / imageSize.width, displaySize.height / imageSize.height)
+        let drawn = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        return CGRect(
+            x: (displaySize.width - drawn.width) / 2,
+            y: (displaySize.height - drawn.height) / 2,
+            width: drawn.width,
+            height: drawn.height
+        )
     }
 
     /// Vision normalizes to a bottom-left origin; SwiftUI draws from the top-left.
-    private func mappedCorners(
+    private func fittedCorners(
         _ quad: TextQuad,
         imageSize: CGSize,
         displaySize: CGSize
     ) -> [CGPoint] {
-        guard imageSize.width > 0, imageSize.height > 0 else { return [] }
-        let scale = min(displaySize.width / imageSize.width, displaySize.height / imageSize.height)
-        let drawnWidth = imageSize.width * scale
-        let drawnHeight = imageSize.height * scale
-        let offsetX = (displaySize.width - drawnWidth) / 2
-        let offsetY = (displaySize.height - drawnHeight) / 2
-
+        let photo = fittedRect(imageSize: imageSize, displaySize: displaySize)
+        guard photo.width > 0, photo.height > 0 else { return [] }
         return quad.corners.map { point in
             CGPoint(
-                x: offsetX + point.x * drawnWidth,
-                y: offsetY + (1 - point.y) * drawnHeight
+                x: photo.minX + point.x * photo.width,
+                y: photo.minY + (1 - point.y) * photo.height
+            )
+        }
+    }
+
+    /// The same magnification the photo is drawn with, applied to a point by hand.
+    private func mappedCorners(
+        _ quad: TextQuad,
+        imageSize: CGSize,
+        displaySize: CGSize,
+        zoom: ImageZoom
+    ) -> [CGPoint] {
+        let center = CGPoint(x: displaySize.width / 2, y: displaySize.height / 2)
+        return fittedCorners(quad, imageSize: imageSize, displaySize: displaySize).map { point in
+            CGPoint(
+                x: center.x + (point.x - zoom.focus.x) * zoom.scale,
+                y: center.y + (point.y - zoom.focus.y) * zoom.scale
             )
         }
     }
@@ -386,6 +509,13 @@ struct ScanResultView: View {
             }
         }
     }
+}
+
+/// A magnification of the photo, expressed as the point it is centred on and how far it is
+/// blown up around it.
+private struct ImageZoom {
+    var scale: CGFloat
+    var focus: CGPoint
 }
 
 private struct QuadShape: Shape {
