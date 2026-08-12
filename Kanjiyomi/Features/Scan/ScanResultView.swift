@@ -19,9 +19,17 @@ struct ScanResultView: View {
     @State private var copyToastTask: Task<Void, Never>?
     @State private var suppressNextRowTap = false
 
+    /// The tab bar shrinks as you scroll, which moves the bottom safe area up and down.
+    /// This screen anchors to the physical bottom edge instead and reserves a fixed strip
+    /// for the bar, so neither the photo nor the sheet resizes mid-scroll.
+    private static let tabBarClearance: CGFloat = 88
+    private static let accessoryClearance: CGFloat = 60
+
     var body: some View {
         GeometryReader { geo in
-            let collapsedHeight = geo.size.height * 0.42
+            let clearance = Self.tabBarClearance
+            let usableHeight = max(geo.size.height - clearance, 0)
+            let collapsedHeight = usableHeight * 0.42 + clearance
             let expandedHeight = geo.size.height
             let panelHeight = resolvedHeight(
                 collapsed: collapsedHeight,
@@ -37,13 +45,23 @@ struct ScanResultView: View {
             .overlay(alignment: .bottom) {
                 if let copyToastMessage {
                     KYCopyToast(message: copyToastMessage)
-                        .padding(.bottom, 36)
+                        .padding(.bottom, clearance + 36)
                         .allowsHitTesting(false)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.86), value: copyToastMessage)
         }
+        .ignoresSafeArea(.container, edges: .bottom)
+    }
+
+    /// Rows have to clear the strip the tab bar sits in, plus the save accessory when it
+    /// is up. Both are scroll content insets, so growing them never moves the sheet itself.
+    private var listBottomInset: CGFloat {
+        let accessory = ScanViewModel.showsSaveInTabBar && viewModel.hasUnsavedOpenAIMeanings
+            ? Self.accessoryClearance
+            : 0
+        return Self.tabBarClearance + accessory + 24
     }
 
     private func resolvedHeight(collapsed: CGFloat, expanded: CGFloat) -> CGFloat {
@@ -170,7 +188,7 @@ struct ScanResultView: View {
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, listBottomInset)
                 }
                 .onScrollGeometryChange(for: CGFloat.self) { geometry in
                     geometry.contentOffset.y + geometry.contentInsets.top
