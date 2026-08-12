@@ -52,6 +52,16 @@ struct VocabularyView: View {
             }
             .background(KYColor.background)
             .navigationTitle("단어장")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        DictionarySearchView()
+                    } label: {
+                        Label("사전 검색", systemImage: "magnifyingglass")
+                    }
+                    .foregroundStyle(KYColor.primary)
+                }
+            }
         }
     }
 

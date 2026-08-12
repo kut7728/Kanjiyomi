@@ -47,6 +47,12 @@ struct RecognizedWord: Identifiable, Hashable, Codable, Sendable {
         surface.isEmpty ? lemma : surface
     }
 
+    /// Still missing something only the model can supply. A word the dictionary does not
+    /// list has no reading either, so a meaning on its own does not mean it is finished.
+    var needsGeneration: Bool {
+        meaningKO.isEmpty || reading.isEmpty
+    }
+
     var displayMeaning: String {
         if !meaningKO.isEmpty { return meaningKO }
         if !meaningEN.isEmpty { return meaningEN }

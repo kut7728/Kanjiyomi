@@ -20,6 +20,10 @@ final class WordCache {
     var exampleKO1: String
     var exampleJP2: String
     var exampleKO2: String
+    /// Which generator wrote `meaningKO`. Empty on rows saved before this was tracked, and
+    /// on rows that only ever held the dictionary half. Lets a ChatGPT pass tell which of
+    /// its words already have a ChatGPT meaning and which would have to be paid for again.
+    var meaningSource: String = ""
     var updatedAt: Date
 
     init(
@@ -35,6 +39,7 @@ final class WordCache {
         exampleKO1: String = "",
         exampleJP2: String = "",
         exampleKO2: String = "",
+        meaningSource: MeaningSource? = nil,
         updatedAt: Date = .now
     ) {
         self.key = key
@@ -49,7 +54,26 @@ final class WordCache {
         self.exampleKO1 = exampleKO1
         self.exampleJP2 = exampleJP2
         self.exampleKO2 = exampleKO2
+        self.meaningSource = meaningSource?.rawValue ?? ""
         self.updatedAt = updatedAt
+    }
+
+    enum MeaningSource: String {
+        /// Apple's on-device model, used by both the dictionary and AI split modes.
+        case foundation
+        case openAI = "openai"
+    }
+
+    func isMeaning(from source: MeaningSource) -> Bool {
+        meaningSource == source.rawValue
+    }
+
+    /// Examples are written for a specific meaning, so replacing the meaning invalidates them.
+    func clearExamples() {
+        exampleJP1 = ""
+        exampleKO1 = ""
+        exampleJP2 = ""
+        exampleKO2 = ""
     }
 
     var examples: [WordExample] {

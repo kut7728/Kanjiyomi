@@ -40,6 +40,10 @@ nonisolated enum TokenizerService {
     private static let maxMergeCount = 6
     private static let maxMergeLength = 12
 
+    /// Generous next to `maxMergeLength`, since the point of a model pass is to allow
+    /// compounds the dictionary cannot confirm, but short enough to reject a whole line.
+    private static let maxModelWordLength = 16
+
     static func tokenRanges(in text: String) -> [TokenRange] {
         guard !text.isEmpty else { return [] }
 
@@ -59,6 +63,45 @@ nonisolated enum TokenizerService {
             index += consumed
         }
         return result
+    }
+
+    /// Locates words a language model proposed inside the line they came from.
+    ///
+    /// The model is told to copy characters verbatim, so each word is searched for from
+    /// where the previous one ended. Anything it invented or reordered simply will not be
+    /// found and is skipped, which keeps one bad word from shifting every later highlight.
+    static func ranges(ofModelWords words: [String], in text: String) -> [TokenRange] {
+        guard !text.isEmpty else { return [] }
+
+        var result: [TokenRange] = []
+        var cursor = text.startIndex
+
+        for word in words {
+            let surface = word.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !surface.isEmpty,
+                  let range = text.range(of: surface, range: cursor..<text.endIndex)
+            else { continue }
+
+            cursor = range.upperBound
+            let token = TokenRange(surface: surface, lemma: surface, range: range)
+            if keepFromModel(token) {
+                result.append(token)
+            }
+        }
+        return result
+    }
+
+    /// Unlike the dictionary pass this keeps words JMdict has never heard of, which is the
+    /// reason to ask a model in the first place. Only grammar and stray marks are removed.
+    private static func keepFromModel(_ token: TokenRange) -> Bool {
+        guard containsJapanese(token.surface), !isMostlyPunctuation(token.surface) else { return false }
+        // A model that ignores the instruction hands back the whole line as one word,
+        // which would read as a single useless entry covering half the photo.
+        guard token.surface.count <= maxModelWordLength else { return false }
+        if stopLemmas.contains(token.surface) || conjugationTails.contains(token.surface) {
+            return false
+        }
+        return !(token.surface.count == 1 && isKana(token.surface))
     }
 
     /// Particles never begin a headword, but they must stay in `pieces` so that a

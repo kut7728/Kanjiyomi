@@ -6,6 +6,8 @@
 import SwiftData
 import SwiftUI
 
+/// Pushed from the vocabulary tab, so it draws into that tab's navigation stack rather than
+/// owning one. That is what gives it a back button and lets the word detail push on top.
 struct DictionarySearchView: View {
     @Environment(\.modelContext) private var modelContext
 
@@ -16,44 +18,42 @@ struct DictionarySearchView: View {
     @State private var searchTask: Task<Void, Never>?
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                KYColor.background.ignoresSafeArea()
+        ZStack {
+            KYColor.background.ignoresSafeArea()
 
-                if results.isEmpty {
-                    placeholder
-                } else {
-                    List(Array(results.enumerated()), id: \.offset) { _, entry in
-                        Button {
-                            open(entry)
-                        } label: {
-                            row(for: entry)
-                        }
-                        .buttonStyle(.plain)
-                        .listRowBackground(KYColor.card)
+            if results.isEmpty {
+                placeholder
+            } else {
+                List(Array(results.enumerated()), id: \.offset) { _, entry in
+                    Button {
+                        open(entry)
+                    } label: {
+                        row(for: entry)
                     }
-                    .scrollContentBackground(.hidden)
-                    .listRowSpacing(10)
+                    .buttonStyle(.plain)
+                    .listRowBackground(KYColor.card)
                 }
+                .scrollContentBackground(.hidden)
+                .listRowSpacing(10)
+            }
 
-                if isLoadingWord {
-                    Color.black.opacity(0.2).ignoresSafeArea()
-                    KYLoadingOverlay(message: "단어를 불러오는 중")
-                }
+            if isLoadingWord {
+                Color.black.opacity(0.2).ignoresSafeArea()
+                KYLoadingOverlay(message: "단어를 불러오는 중")
             }
-            .navigationTitle("검색")
-            .navigationBarTitleDisplayMode(.inline)
-            .searchable(
-                text: $query,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "일본어 단어 또는 영어 뜻"
-            )
-            .onChange(of: query) { _, newValue in
-                scheduleSearch(newValue)
-            }
-            .navigationDestination(item: $detailWord) { word in
-                WordDetailView(word: word)
-            }
+        }
+        .navigationTitle("사전 검색")
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(
+            text: $query,
+            placement: .navigationBarDrawer(displayMode: .always),
+            prompt: "일본어 단어 또는 영어 뜻"
+        )
+        .onChange(of: query) { _, newValue in
+            scheduleSearch(newValue)
+        }
+        .navigationDestination(item: $detailWord) { word in
+            WordDetailView(word: word)
         }
     }
 
@@ -122,11 +122,14 @@ struct DictionarySearchView: View {
                 lemma: headword,
                 modelContext: modelContext
             )
+            // The search row already carries a reading, so falling back to it also means
+            // deriving the Hangul from it rather than leaving the pronunciation blank.
+            let reading = enriched.reading.isEmpty ? entry.reading : enriched.reading
             var word = RecognizedWord(
                 surface: headword,
                 lemma: headword,
-                reading: enriched.reading.isEmpty ? entry.reading : enriched.reading,
-                hangul: enriched.hangul,
+                reading: reading,
+                hangul: enriched.hangul.isEmpty ? KanaRomanizer.toHangul(reading) : enriched.hangul,
                 meaningKO: enriched.meaningKO,
                 meaningEN: enriched.meaningEN.isEmpty ? entry.glossEN : enriched.meaningEN,
                 partOfSpeech: enriched.partOfSpeech,
@@ -139,8 +142,12 @@ struct DictionarySearchView: View {
                     modelContext: modelContext
                 )
                 let key = WordCache.makeKey(surface: word.surface, lemma: word.lemma)
-                if let meaning = generated[key] {
-                    word.meaningKO = meaning
+                if let result = generated[key] {
+                    word.meaningKO = result.meaningKO
+                    if word.reading.isEmpty, !result.reading.isEmpty {
+                        word.reading = result.reading
+                        word.hangul = result.hangul
+                    }
                 }
             }
             isLoadingWord = false

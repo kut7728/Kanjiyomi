@@ -3,10 +3,13 @@
 //  Kanjiyomi
 //
 
+import SwiftData
 import SwiftUI
 
 struct ScanResultView: View {
     @Bindable var viewModel: ScanViewModel
+
+    @Environment(\.modelContext) private var modelContext
 
     @State private var isExpanded = false
     @State private var dragTranslation: CGFloat = 0
@@ -148,6 +151,10 @@ struct ScanResultView: View {
                     .padding(.bottom, 12)
             }
 
+            if viewModel.hasUnsavedOpenAIMeanings, !ScanViewModel.showsSaveInTabBar {
+                saveBar
+            }
+
             if viewModel.words.isEmpty && !viewModel.isProcessing {
                 Text("아직 표시할 단어가 없어요.")
                     .font(KYFont.callout())
@@ -223,6 +230,36 @@ struct ScanResultView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 12)
         }
+    }
+
+    /// A ChatGPT pass is shown before it is stored, so keeping it is a deliberate step.
+    /// Saving replaces the meanings already in the cache for these words.
+    private var saveBar: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("ChatGPT 결과는 아직 저장 전이에요")
+                    .font(KYFont.callout())
+                    .foregroundStyle(KYColor.textPrimary)
+                Text("저장하면 기존에 저장된 뜻을 덮어씁니다")
+                    .font(KYFont.caption())
+                    .foregroundStyle(KYColor.textSecondary)
+            }
+            Spacer(minLength: 0)
+            Button("저장") {
+                viewModel.saveOpenAIMeanings(modelContext: modelContext)
+            }
+            .font(KYFont.callout())
+            .buttonStyle(.borderedProminent)
+            .tint(KYColor.primary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(KYColor.primary.opacity(0.08))
+        )
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
     }
 
     private func dragGesture(collapsed: CGFloat, expanded: CGFloat, fromList: Bool) -> some Gesture {

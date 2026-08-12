@@ -12,17 +12,57 @@ enum ScanPipeline {
     /// context window, large enough that a typical photo needs only one or two calls.
     static let meaningBatchSize = 8
 
+    /// The remote model has a far larger context and is billed per request round trip.
+    static let openAIMeaningBatchSize = 24
+
     /// OCR, tokenization and dictionary lookup. Nothing here touches the language model,
     /// so the word list can be shown as soon as this returns.
+    /// Recognition is always re-run for a mode change rather than resplitting the stored
+    /// words, because a highlight quad can only be measured against the Vision result the
+    /// text came from.
     static func recognize(
         image: UIImage,
+        mode: SegmentationMode,
         modelContext: ModelContext,
         onProgress: (String) -> Void = { _ in }
     ) async throws -> [RecognizedWord] {
-        onProgress("사진에서 글자를 찾고 있어요")
-        let spans = try await OCRService.recognizeTokens(in: image)
-        onProgress("단어를 나누고 있어요")
+        let mode = mode.resolved
+        onProgress(mode.progressMessage)
 
+        OpenAIService.shared.clearError()
+        let segmenter: OCRService.LineSegmenter? = switch mode {
+        case .dictionary: nil
+        case .model: { lines in await MeaningService.shared.segment(lines: lines) }
+        case .openAI: { lines in await OpenAIService.shared.segment(lines: lines) }
+        }
+        let spans = try await OCRService.recognizeTokens(in: image, segmenter: segmenter)
+
+        onProgress("사전에서 뜻을 찾고 있어요")
+        // An unlisted word arrives with no reading and no gloss, so keeping it only helps if
+        // the meaning pass that follows can actually fill it in.
+        let keepUnlisted = switch mode {
+        case .dictionary: false
+        case .model: MeaningService.shared.isGenerationAvailable
+        case .openAI: true
+        }
+        return words(
+            from: spans,
+            modelContext: modelContext,
+            keepUnlisted: keepUnlisted,
+            requiredSource: mode == .openAI ? .openAI : nil
+        )
+    }
+
+    /// - Parameter keepUnlisted: whether to keep words the dictionary knows nothing about.
+    ///   They have no reading and no gloss, so only a model pass can give them a meaning.
+    /// - Parameter requiredSource: which generator a cached meaning has to have come from
+    ///   to be reused rather than generated again.
+    private static func words(
+        from spans: [TokenSpan],
+        modelContext: ModelContext,
+        keepUnlisted: Bool,
+        requiredSource: WordCache.MeaningSource?
+    ) -> [RecognizedWord] {
         // Merge repeats of the same word so every occurrence stays highlightable.
         var order: [String] = []
         var grouped: [String: (surface: String, lemma: String, quads: [TextQuad])] = [:]
@@ -37,19 +77,20 @@ enum ScanPipeline {
             }
         }
 
-        onProgress("사전에서 뜻을 찾고 있어요")
         var words: [RecognizedWord] = []
         for key in order {
             guard let group = grouped[key] else { continue }
             let enriched = MeaningService.shared.resolve(
                 surface: group.surface,
                 lemma: group.lemma,
-                modelContext: modelContext
+                modelContext: modelContext,
+                requiredSource: requiredSource
             )
-            // Skip tokens with no dictionary hit and no meaning.
-            if enriched.meaningKO.isEmpty && enriched.meaningEN.isEmpty && enriched.reading.isEmpty {
-                continue
-            }
+            let isUnlisted = enriched.meaningKO.isEmpty
+                && enriched.meaningEN.isEmpty
+                && enriched.reading.isEmpty
+            if isUnlisted && !keepUnlisted { continue }
+
             words.append(
                 RecognizedWord(
                     surface: group.surface,
@@ -73,23 +114,29 @@ enum ScanPipeline {
     /// of holding the whole scan behind the language model.
     static func fillMeanings(
         _ words: [RecognizedWord],
+        mode: SegmentationMode,
         modelContext: ModelContext,
         onUpdate: ([RecognizedWord]) -> Void
     ) async {
-        let service = MeaningService.shared
-        guard service.isGenerationAvailable else { return }
+        let usesOpenAI = mode == .openAI
+        guard usesOpenAI || MeaningService.shared.isGenerationAvailable else { return }
 
         var current = words
-        let pending = current.indices.filter { current[$0].meaningKO.isEmpty }
+        let pending = current.indices.filter { current[$0].needsGeneration }
         guard !pending.isEmpty else { return }
 
-        for batch in pending.chunked(into: meaningBatchSize) {
+        // A round trip costs far more than a longer prompt, so the remote model is asked
+        // for more words at once than the on-device one.
+        let batchSize = usesOpenAI ? openAIMeaningBatchSize : meaningBatchSize
+        for batch in pending.chunked(into: batchSize) {
             if Task.isCancelled { return }
 
-            let generated = await service.generateMeanings(
-                for: batch.map { current[$0] },
-                modelContext: modelContext
-            )
+            let generated = usesOpenAI
+                ? await OpenAIService.shared.generateMeanings(for: batch.map { current[$0] })
+                : await MeaningService.shared.generateMeanings(
+                    for: batch.map { current[$0] },
+                    modelContext: modelContext
+                )
             guard !generated.isEmpty else { continue }
 
             for index in batch {
@@ -97,8 +144,12 @@ enum ScanPipeline {
                     surface: current[index].surface,
                     lemma: current[index].lemma
                 )
-                if let meaning = generated[key] {
-                    current[index].meaningKO = meaning
+                guard let result = generated[key] else { continue }
+                current[index].meaningKO = result.meaningKO
+                // Only words the dictionary could not place come back with a reading.
+                if current[index].reading.isEmpty, !result.reading.isEmpty {
+                    current[index].reading = result.reading
+                    current[index].hangul = result.hangul
                 }
             }
             onUpdate(current)

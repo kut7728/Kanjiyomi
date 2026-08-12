@@ -44,12 +44,41 @@ nonisolated final class DictionaryService: @unchecked Sendable {
         defer { lock.unlock() }
         guard db != nil else { return nil }
 
-        let candidates = uniqueNonEmpty([surface, lemma])
+        if let entry = firstEntry(for: uniqueNonEmpty([surface, lemma])) {
+            return entry
+        }
+
+        // ご利用 has no entry of its own while 利用 does. The polite prefix adds nothing to
+        // the meaning and reads as its own kana, so it is put back in front of the reading.
+        for word in uniqueNonEmpty([surface, lemma]) {
+            guard let (stem, prefix) = Self.splitPolitePrefix(word),
+                  let entry = firstEntry(for: [stem])
+            else { continue }
+            return DictionaryEntry(
+                kanji: entry.kanji,
+                reading: entry.reading.isEmpty ? "" : prefix + entry.reading,
+                partOfSpeech: entry.partOfSpeech,
+                glossEN: entry.glossEN
+            )
+        }
+        return nil
+    }
+
+    private func firstEntry(for candidates: [String]) -> DictionaryEntry? {
         for word in candidates {
             if let entry = query(kanji: word) { return entry }
         }
         for word in candidates {
             if let entry = query(reading: word) { return entry }
+        }
+        return nil
+    }
+
+    /// Splits お / ご off a word, but only when enough is left to be a word on its own,
+    /// so お茶 and ご飯 are not mistaken for a prefix plus a stem.
+    private static func splitPolitePrefix(_ word: String) -> (stem: String, prefix: String)? {
+        for prefix in ["お", "ご"] where word.hasPrefix(prefix) && word.count >= 4 {
+            return (String(word.dropFirst()), prefix)
         }
         return nil
     }

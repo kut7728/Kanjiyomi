@@ -8,12 +8,32 @@ import SwiftUI
 import UIKit
 
 struct ScanView: View {
+    /// Owned by the tab view so the save prompt can live in the tab bar accessory, which
+    /// is attached above this screen.
+    @Bindable var viewModel: ScanViewModel
+
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \ScanRecord.createdAt, order: .reverse) private var records: [ScanRecord]
-    @State private var viewModel = ScanViewModel()
     @State private var showCamera = false
     @State private var showLibrary = false
     @State private var pickedImage: UIImage?
+    /// Carried over to the next photo. Only ever holds an on-device mode: ChatGPT bills the
+    /// user, so it has to be asked for rather than quietly becoming the default.
+    @AppStorage("wordSegmentation") private var defaultMode: SegmentationMode = .dictionary
+
+    /// The mode the photo on screen was read with, including a one-off ChatGPT run. Cleared
+    /// for every new photo so a paid pass never repeats without being asked for.
+    @State private var sessionMode: SegmentationMode?
+
+    /// Resolved so deleting the API key returns the picker to the dictionary rather than
+    /// leaving it on a mode the device can no longer run.
+    private var activeMode: SegmentationMode {
+        (sessionMode ?? defaultMode).resolved
+    }
+
+    private var onDeviceModes: [SegmentationMode] {
+        SegmentationMode.available.filter { $0 != .openAI }
+    }
 
     var body: some View {
         NavigationStack {
@@ -53,6 +73,33 @@ struct ScanView: View {
                         .foregroundStyle(KYColor.primary)
                     }
                 }
+                if viewModel.canChooseSegmentation {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Menu {
+                            Section("이 기기에서 처리") {
+                                ForEach(onDeviceModes) { mode in
+                                    modeButton(mode)
+                                }
+                            }
+                            // Kept in its own section so the paid option can never be
+                            // mistaken for one of the free ones sitting next to it.
+                            if OpenAIService.shared.isConfigured {
+                                Section("내 API 키로 요청 · 요금 발생") {
+                                    modeButton(.openAI)
+                                }
+                            } else {
+                                Section {
+                                    Button("설정에서 API 키를 넣으면 ChatGPT도 쓸 수 있어요") {}
+                                        .disabled(true)
+                                }
+                            }
+                        } label: {
+                            Label("단어 나누기", systemImage: activeMode.systemImage)
+                        }
+                        .foregroundStyle(KYColor.primary)
+                        .disabled(viewModel.isGeneratingMeanings)
+                    }
+                }
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraPicker(image: $pickedImage)
@@ -64,13 +111,37 @@ struct ScanView: View {
             .onChange(of: pickedImage) { _, newValue in
                 guard let newValue else { return }
                 viewModel.image = newValue
+                sessionMode = nil
                 Task {
-                    await viewModel.process(modelContext: modelContext)
+                    await viewModel.process(mode: defaultMode, modelContext: modelContext)
                 }
             }
             .navigationDestination(item: $viewModel.showDetailWord) { word in
                 WordDetailView(word: word)
             }
+        }
+    }
+
+    private func modeButton(_ mode: SegmentationMode) -> some View {
+        Button {
+            select(mode)
+        } label: {
+            Label(
+                mode.label,
+                systemImage: activeMode == mode ? "checkmark" : mode.systemImage
+            )
+        }
+    }
+
+    private func select(_ mode: SegmentationMode) {
+        guard mode != activeMode else { return }
+        sessionMode = mode
+        // Remembering ChatGPT would mean the next photo silently costs money.
+        if mode != .openAI {
+            defaultMode = mode
+        }
+        Task {
+            await viewModel.resegment(using: mode, modelContext: modelContext)
         }
     }
 

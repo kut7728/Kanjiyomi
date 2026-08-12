@@ -21,6 +21,20 @@ final class ScanViewModel {
     var selectedWordID: RecognizedWord.ID?
     var showDetailWord: RecognizedWord?
 
+    /// Which way the words on screen were produced. Drives both the meaning generator and
+    /// whether those meanings are waiting to be saved.
+    private(set) var activeMode: SegmentationMode = .dictionary
+
+    /// A finished ChatGPT pass that has not been written to the cache yet.
+    private(set) var hasUnsavedOpenAIMeanings = false
+
+    /// Where the save prompt is shown. The tab bar accessory keeps it visible no matter how
+    /// far the word list is scrolled, but it only exists on iOS 26, so older systems fall
+    /// back to a bar inside the panel.
+    static var showsSaveInTabBar: Bool {
+        if #available(iOS 26.0, *) { true } else { false }
+    }
+
     @ObservationIgnored private var meaningTask: Task<Void, Never>?
     @ObservationIgnored private var currentRecord: ScanRecord?
 
@@ -29,7 +43,55 @@ final class ScanViewModel {
         return words.first { $0.id == selectedWordID }
     }
 
-    func process(modelContext: ModelContext) async {
+    /// Offered only once a scan is on screen, and only when there is another way to split.
+    var canChooseSegmentation: Bool {
+        image != nil && !isProcessing && SegmentationMode.available.count > 1
+    }
+
+    /// Reads the same photo again with a different way of deciding word boundaries.
+    func resegment(using mode: SegmentationMode, modelContext: ModelContext) async {
+        guard let image, !isProcessing else { return }
+
+        meaningTask?.cancel()
+        isProcessing = true
+        errorMessage = nil
+        selectedWordID = nil
+        showDetailWord = nil
+        activeMode = mode.resolved
+        hasUnsavedOpenAIMeanings = false
+
+        let rescanned: [RecognizedWord]
+        do {
+            rescanned = try await ScanPipeline.recognize(
+                image: image,
+                mode: mode,
+                modelContext: modelContext
+            ) { message in
+                statusMessage = message
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            isProcessing = false
+            return
+        }
+        isProcessing = false
+        // A failed remote split still produces words from the dictionary fallback, so the
+        // reason has to be shown separately or it looks like nothing happened.
+        errorMessage = OpenAIService.shared.lastErrorMessage
+
+        // Keeping the previous list beats replacing it with nothing.
+        guard !rescanned.isEmpty else {
+            errorMessage = "다시 인식한 단어가 없어요. 기존 결과를 그대로 둘게요."
+            return
+        }
+
+        words = rescanned
+        currentRecord?.update(words: words)
+        try? modelContext.save()
+        startMeaningGeneration(modelContext: modelContext)
+    }
+
+    func process(mode: SegmentationMode, modelContext: ModelContext) async {
         guard let original = image else { return }
         // OCR reads the raw pixel buffer, so bake EXIF orientation in before analyzing
         // and display the same image to keep highlight coordinates aligned.
@@ -43,12 +105,18 @@ final class ScanViewModel {
         errorMessage = nil
         words = []
         selectedWordID = nil
+        activeMode = mode.resolved
+        hasUnsavedOpenAIMeanings = false
 
         // Loading the model now overlaps its cold start with OCR.
         MeaningService.shared.prewarm()
 
         do {
-            words = try await ScanPipeline.recognize(image: image, modelContext: modelContext) { message in
+            words = try await ScanPipeline.recognize(
+                image: image,
+                mode: mode,
+                modelContext: modelContext
+            ) { message in
                 statusMessage = message
             }
         } catch {
@@ -57,6 +125,7 @@ final class ScanViewModel {
             return
         }
         isProcessing = false
+        errorMessage = OpenAIService.shared.lastErrorMessage
 
         guard !words.isEmpty else {
             errorMessage = "인식된 일본어 단어가 없습니다. 다른 사진을 시도해 보세요."
@@ -75,23 +144,51 @@ final class ScanViewModel {
         selectedWordID = nil
         errorMessage = nil
         showDetailWord = nil
+        // Reopening a scan never re-runs a paid pass; anything still missing is filled in
+        // by whatever runs on the device.
+        activeMode = .dictionary
+        hasUnsavedOpenAIMeanings = false
         // A scan left before generation finished still has words without a Korean meaning.
         startMeaningGeneration(modelContext: modelContext)
     }
 
+    /// Writes the current ChatGPT meanings over whatever the cache already held.
+    func saveOpenAIMeanings(modelContext: ModelContext) {
+        MeaningService.shared.persistOpenAIMeanings(words, modelContext: modelContext)
+        currentRecord?.update(words: words)
+        try? modelContext.save()
+        hasUnsavedOpenAIMeanings = false
+    }
+
     /// Runs alongside the visible list, replacing it batch by batch as meanings come back.
     private func startMeaningGeneration(modelContext: ModelContext) {
-        guard MeaningService.shared.isGenerationAvailable,
-              words.contains(where: { $0.meaningKO.isEmpty }) else { return }
+        let mode = activeMode
+        let canGenerate = mode == .openAI
+            ? OpenAIService.shared.isConfigured
+            : MeaningService.shared.isGenerationAvailable
+        guard canGenerate, words.contains(where: \.needsGeneration) else { return }
 
         let snapshot = words
         isGeneratingMeanings = true
         meaningTask = Task { [weak self] in
-            await ScanPipeline.fillMeanings(snapshot, modelContext: modelContext) { updated in
+            await ScanPipeline.fillMeanings(
+                snapshot,
+                mode: mode,
+                modelContext: modelContext
+            ) { updated in
                 self?.applyMeanings(updated)
             }
             guard let self, !Task.isCancelled else { return }
             self.isGeneratingMeanings = false
+            // Generation runs after recognition has already reported its result, so a
+            // failure here has no other way to reach the screen.
+            if mode == .openAI, let message = OpenAIService.shared.lastErrorMessage {
+                self.errorMessage = message
+            }
+            // ChatGPT results are not cached until asked for, so the offer to keep them
+            // only makes sense once something was actually produced.
+            self.hasUnsavedOpenAIMeanings = mode == .openAI
+                && self.words.contains { !$0.meaningKO.isEmpty }
             self.currentRecord?.update(words: self.words)
             try? modelContext.save()
         }
@@ -126,5 +223,7 @@ final class ScanViewModel {
         selectedWordID = nil
         errorMessage = nil
         showDetailWord = nil
+        activeMode = .dictionary
+        hasUnsavedOpenAIMeanings = false
     }
 }
