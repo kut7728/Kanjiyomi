@@ -28,14 +28,17 @@ struct VocabularyView: View {
             .navigationTitle(title)
             .environment(\.editMode, $editMode)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                // Select all sits next to Done rather than beside Delete, so the right edge
+                // holds the one destructive action and nothing to misread it as.
+                ToolbarItemGroup(placement: .topBarLeading) {
                     if !words.isEmpty { selectButton }
+                    if isEditing { selectAllButton }
                 }
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     if isEditing {
-                        selectAllButton
                         deleteButton
                     } else {
+                        wordCount
                         searchLink
                     }
                 }
@@ -71,8 +74,17 @@ struct VocabularyView: View {
                     row(for: word)
                 }
                 .listRowBackground(KYColor.card)
+                // A swipe rather than `onDelete`, which takes over edit mode with its own
+                // red minus on the leading edge and suppresses the selection circles that
+                // make bulk deletion possible.
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        delete(word)
+                    } label: {
+                        Label("삭제", systemImage: "trash")
+                    }
+                }
             }
-            .onDelete(perform: delete)
         }
         .scrollContentBackground(.hidden)
         .listRowSpacing(10)
@@ -117,6 +129,16 @@ struct VocabularyView: View {
         .foregroundStyle(KYColor.primary)
     }
 
+    /// Hidden while editing, where the title counts the selection instead.
+    @ViewBuilder
+    private var wordCount: some View {
+        if !words.isEmpty {
+            Text("\(words.count)개")
+                .font(KYFont.caption())
+                .foregroundStyle(KYColor.textSecondary)
+        }
+    }
+
     private var selectAllButton: some View {
         Button(selection.count == words.count ? "전체 해제" : "전체 선택") {
             selection = selection.count == words.count ? [] : Set(words.map(\.id))
@@ -157,10 +179,8 @@ struct VocabularyView: View {
 
     // MARK: - Actions
 
-    private func delete(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(words[index])
-        }
+    private func delete(_ word: VocabWord) {
+        modelContext.delete(word)
         try? modelContext.save()
     }
 
