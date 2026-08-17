@@ -6,23 +6,24 @@
 import Foundation
 import SwiftData
 
-/// Every scan feeds its words into the vocabulary list, so this is the single place that
+/// A saved scan feeds its words into the vocabulary list, so this is the single place that
 /// decides what counts as the same word and what happens when it is already saved.
 @MainActor
 enum VocabularyStore {
-    /// Files a finished scan into the vocabulary.
+    /// Files a scan into the vocabulary, and reports how many of its words were new.
     ///
     /// Words the model never managed to explain are left out; an entry showing "뜻 없음"
     /// is nothing to study. Words already saved are only ever filled in, never rewritten,
     /// so a later scan can supply a missing reading without changing a meaning the user
     /// has been learning from.
+    @discardableResult
     static func absorb(
         _ words: [RecognizedWord],
         from scanRecordID: UUID?,
         modelContext: ModelContext
-    ) {
+    ) -> Int {
         let candidates = words.filter { !$0.meaningKO.isEmpty && !$0.displayHeadword.isEmpty }
-        guard !candidates.isEmpty else { return }
+        guard !candidates.isEmpty else { return 0 }
 
         // One photo commonly shows the same word several times.
         var seen = Set<String>()
@@ -35,6 +36,7 @@ enum VocabularyStore {
             uniquingKeysWith: { first, _ in first }
         )
 
+        var added = 0
         for word in incoming {
             let key = key(for: word)
             if let existing = index[key] {
@@ -47,9 +49,11 @@ enum VocabularyStore {
                 let entry = VocabWord(from: word, scanRecordID: scanRecordID)
                 modelContext.insert(entry)
                 index[key] = entry
+                added += 1
             }
         }
         try? modelContext.save()
+        return added
     }
 
     private static func key(for word: RecognizedWord) -> String {

@@ -17,8 +17,8 @@ struct ScanResultView: View {
     @State private var dragTranslation: CGFloat = 0
     @State private var listOffset: CGFloat = 0
     @State private var isDraggingSheet = false
-    @State private var copyToastMessage: String?
-    @State private var copyToastTask: Task<Void, Never>?
+    @State private var toastMessage: String?
+    @State private var toastTask: Task<Void, Never>?
     @State private var suppressNextRowTap = false
 
     /// The tab bar shrinks as you scroll, which moves the bottom safe area up and down.
@@ -55,14 +55,14 @@ struct ScanResultView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .overlay(alignment: .bottom) {
-                if let copyToastMessage {
-                    KYCopyToast(message: copyToastMessage)
+                if let toastMessage {
+                    KYCopyToast(message: toastMessage)
                         .padding(.bottom, clearance + 36)
                         .allowsHitTesting(false)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.35, dampingFraction: 0.86), value: copyToastMessage)
+            .animation(.spring(response: 0.35, dampingFraction: 0.86), value: toastMessage)
         }
         .ignoresSafeArea(.container, edges: .bottom)
         // Keyed on the scan rather than the selection: clearing the selection by tapping the
@@ -79,7 +79,7 @@ struct ScanResultView: View {
     /// Rows have to clear the strip the tab bar sits in, plus the save accessory when it
     /// is up. Both are scroll content insets, so growing them never moves the sheet itself.
     private var listBottomInset: CGFloat {
-        let accessory = ScanViewModel.showsSaveInTabBar && viewModel.hasUnsavedOpenAIMeanings
+        let accessory = ScanViewModel.showsSaveInTabBar && viewModel.hasUnsavedWords
             ? Self.accessoryClearance
             : 0
         return Self.tabBarClearance + accessory + 24
@@ -292,7 +292,7 @@ struct ScanResultView: View {
                     .padding(.bottom, 12)
             }
 
-            if viewModel.hasUnsavedOpenAIMeanings, !ScanViewModel.showsSaveInTabBar {
+            if viewModel.hasUnsavedWords, !ScanViewModel.showsSaveInTabBar {
                 saveBar
             }
 
@@ -373,25 +373,22 @@ struct ScanResultView: View {
         }
     }
 
-    /// A ChatGPT pass is shown before it is stored, so keeping it is a deliberate step.
-    /// Saving replaces the meanings already in the cache for these words.
+    /// Recognition only puts words on screen, so keeping them is a deliberate step.
     private var saveBar: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("ChatGPT 결과는 아직 저장 전이에요")
+                Text("아직 단어장에 저장하지 않았어요")
                     .font(KYFont.callout())
                     .foregroundStyle(KYColor.textPrimary)
-                Text("저장하면 기존에 저장된 뜻을 덮어씁니다")
+                Text(viewModel.saveHint)
                     .font(KYFont.caption())
                     .foregroundStyle(KYColor.textSecondary)
             }
             Spacer(minLength: 0)
-            Button("저장") {
-                viewModel.saveOpenAIMeanings(modelContext: modelContext)
-            }
-            .font(KYFont.callout())
-            .buttonStyle(.borderedProminent)
-            .tint(KYColor.primary)
+            Button("저장", action: save)
+                .font(KYFont.callout())
+                .buttonStyle(.borderedProminent)
+                .tint(KYColor.primary)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -493,18 +490,29 @@ struct ScanResultView: View {
         .accessibilityHint("길게 누르면 일본어를 복사합니다")
     }
 
+    /// The bar disappears once saved, which says the tap registered but not what it did, so
+    /// the count of words that actually joined the list is reported separately.
+    private func save() {
+        let added = viewModel.saveToVocabulary(modelContext: modelContext)
+        showToast(added > 0 ? "단어장에 \(added)개 저장됨" : "이미 단어장에 있는 단어예요")
+    }
+
     private func copyJapanese(_ text: String) {
         ClipboardCopy.copy(text)
-        copyToastTask?.cancel()
+        showToast("「\(text)」 복사됨")
+    }
+
+    private func showToast(_ message: String) {
+        toastTask?.cancel()
         withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
-            copyToastMessage = "「\(text)」 복사됨"
+            toastMessage = message
         }
-        copyToastTask = Task {
+        toastTask = Task {
             try? await Task.sleep(for: .seconds(1.4))
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
-                    copyToastMessage = nil
+                    toastMessage = nil
                 }
             }
         }

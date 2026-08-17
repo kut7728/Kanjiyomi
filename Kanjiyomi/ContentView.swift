@@ -30,17 +30,19 @@ struct ContentView: View {
             .onChange(of: scanRouter.request) { _, request in
                 if let request { reveal(request) }
             }
+            // The accessory has room for a label and a button but not for what saving does,
+            // unlike the bar inside the scan panel, so that explanation lands here.
             .confirmationDialog(
-                "ChatGPT가 만든 뜻을 저장할까요?",
+                "인식된 단어를 단어장에 저장할까요?",
                 isPresented: $confirmingSave,
                 titleVisibility: .visible
             ) {
                 Button("저장") {
-                    scanViewModel.saveOpenAIMeanings(modelContext: modelContext)
+                    scanViewModel.saveToVocabulary(modelContext: modelContext)
                 }
                 Button("취소", role: .cancel) {}
             } message: {
-                Text("이 단어들에 이미 저장된 뜻이 있으면 덮어씁니다.")
+                Text(scanViewModel.saveHint)
             }
     }
 
@@ -64,24 +66,24 @@ struct ContentView: View {
             content
                 .tabBarMinimizeBehavior(.onScrollDown)
                 .tabViewBottomAccessory(isEnabled: showsSavePrompt) {
-                    SaveMeaningsAccessory { confirmingSave = true }
+                    SaveVocabularyAccessory { confirmingSave = true }
                 }
         } else if showsSavePrompt {
             content
                 .tabBarMinimizeBehavior(.onScrollDown)
                 .tabViewBottomAccessory {
-                    SaveMeaningsAccessory { confirmingSave = true }
+                    SaveVocabularyAccessory { confirmingSave = true }
                 }
         } else {
             content.tabBarMinimizeBehavior(.onScrollDown)
         }
     }
 
-    /// Not restricted to the scan tab. An unsaved ChatGPT pass was paid for and is thrown
-    /// away by the next scan, so the chance to keep it should follow the user rather than
+    /// Not restricted to the scan tab. An unsaved pass is thrown away by the next scan, and a
+    /// ChatGPT one was paid for, so the chance to keep it should follow the user rather than
     /// disappear the moment they look at something else.
     private var showsSavePrompt: Bool {
-        scanViewModel.hasUnsavedOpenAIMeanings
+        scanViewModel.hasUnsavedWords
     }
 
     private var tabContent: some View {
@@ -121,15 +123,15 @@ struct ContentView: View {
 }
 
 @available(iOS 26.0, *)
-private struct SaveMeaningsAccessory: View {
+private struct SaveVocabularyAccessory: View {
     let save: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "cloud")
+            Image(systemName: "bookmark")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(KYColor.primary)
-            Text("ChatGPT 결과 저장 전")
+            Text("단어장에 저장 전")
                 .font(KYFont.callout())
                 .foregroundStyle(KYColor.textPrimary)
                 .lineLimit(1)

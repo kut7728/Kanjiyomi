@@ -22,18 +22,25 @@ final class ScanViewModel {
     var showDetailWord: RecognizedWord?
 
     /// Which way the words on screen were produced. Drives both the meaning generator and
-    /// whether those meanings are waiting to be saved.
+    /// what saving has to write.
     private(set) var activeMode: SegmentationMode = .dictionary
 
     /// Derived rather than stored. A stored flag has to be set by whichever code path
     /// happens to finish last, and a cancelled generation task never reaches that line,
     /// which left results on screen with no way to keep them.
-    var hasUnsavedOpenAIMeanings: Bool {
-        activeMode == .openAI
-            && !savedCurrentPass
+    var hasUnsavedWords: Bool {
+        !savedCurrentPass
             && !isProcessing
             && !isGeneratingMeanings
             && words.contains { !$0.meaningKO.isEmpty }
+    }
+
+    /// What saving is about to do, beyond adding the words. A ChatGPT pass also replaces
+    /// the meanings the cache already holds for these words.
+    var saveHint: String {
+        activeMode == .openAI
+            ? "ChatGPT가 만든 뜻으로 기존에 저장된 뜻을 덮어씁니다"
+            : "이미 단어장에 있는 단어는 그대로 둡니다"
     }
 
     private var savedCurrentPass = false
@@ -99,8 +106,8 @@ final class ScanViewModel {
         currentRecord?.update(words: words)
         currentRecord?.segmentation = activeMode
         currentRecord?.meaningsSaved = false
-        // A different split finds different words, so this pass gets its own turn at the
-        // vocabulary.
+        // A different split finds different words, so this pass gets its own offer to be
+        // saved.
         currentRecord?.vocabularyAdded = false
         try? modelContext.save()
         startMeaningGeneration(modelContext: modelContext)
@@ -163,7 +170,7 @@ final class ScanViewModel {
         // would suppress the save offer this scan is entitled to.
         isGeneratingMeanings = false
         activeMode = record.segmentation
-        savedCurrentPass = record.meaningsSaved
+        savedCurrentPass = record.vocabularyAdded
 
         // Reopening must never spend the user's money on its own. A ChatGPT scan is shown
         // exactly as it was stored, and its save offer comes back with it.
@@ -172,13 +179,29 @@ final class ScanViewModel {
         startMeaningGeneration(modelContext: modelContext)
     }
 
-    /// Writes the current ChatGPT meanings over whatever the cache already held.
-    func saveOpenAIMeanings(modelContext: ModelContext) {
-        MeaningService.shared.persistOpenAIMeanings(words, modelContext: modelContext)
+    /// Files the scan into the vocabulary, and returns how many words were new to the list.
+    ///
+    /// Nothing a scan reads reaches the vocabulary before this runs. A photo turns up plenty
+    /// of words the user has no reason to study, so which scans are worth keeping is theirs
+    /// to decide rather than a consequence of pointing the camera at something.
+    @discardableResult
+    func saveToVocabulary(modelContext: ModelContext) -> Int {
+        // A ChatGPT pass lives only in memory until now, so keeping its words has to keep
+        // the meanings they are being saved with.
+        if activeMode == .openAI {
+            MeaningService.shared.persistOpenAIMeanings(words, modelContext: modelContext)
+            currentRecord?.meaningsSaved = true
+        }
+        let added = VocabularyStore.absorb(
+            words,
+            from: currentRecord?.id,
+            modelContext: modelContext
+        )
         currentRecord?.update(words: words)
-        currentRecord?.meaningsSaved = true
+        currentRecord?.vocabularyAdded = true
         try? modelContext.save()
         savedCurrentPass = true
+        return added
     }
 
     /// Runs alongside the visible list, replacing it batch by batch as meanings come back.
@@ -187,11 +210,9 @@ final class ScanViewModel {
         let canGenerate = mode == .openAI
             ? OpenAIService.shared.isConfigured
             : MeaningService.shared.isGenerationAvailable
-        guard canGenerate, words.contains(where: \.needsGeneration) else {
-            // Nothing left to generate, so the dictionary pass is already the final answer.
-            fileIntoVocabulary(modelContext: modelContext)
-            return
-        }
+        // Nothing left to generate, so the dictionary pass is already the final answer and
+        // the save offer stands as it is.
+        guard canGenerate, words.contains(where: \.needsGeneration) else { return }
 
         let snapshot = words
         isGeneratingMeanings = true
@@ -212,19 +233,7 @@ final class ScanViewModel {
             }
             self.currentRecord?.update(words: self.words)
             try? modelContext.save()
-            self.fileIntoVocabulary(modelContext: modelContext)
         }
-    }
-
-    /// Every recognized word joins the vocabulary once its meaning has settled.
-    ///
-    /// Gated on the scan rather than run on every appearance, because reopening an old scan
-    /// would otherwise restore words the user has deliberately deleted from their list.
-    private func fileIntoVocabulary(modelContext: ModelContext) {
-        guard currentRecord?.vocabularyAdded != true else { return }
-        VocabularyStore.absorb(words, from: currentRecord?.id, modelContext: modelContext)
-        currentRecord?.vocabularyAdded = true
-        try? modelContext.save()
     }
 
     private func applyMeanings(_ updated: [RecognizedWord]) {
