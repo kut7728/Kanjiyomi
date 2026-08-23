@@ -70,6 +70,23 @@ struct ScanView: View {
                         .foregroundStyle(KYColor.primary)
                     }
                 }
+                // In the toolbar rather than on the photo: the word list opens over the whole
+                // screen, so at the moment the user wants to narrow it there is no photo on
+                // screen to put a button on.
+                if viewModel.canSelectRegion {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            viewModel.isSelectingRegion = true
+                        } label: {
+                            Label(
+                                "영역 선택",
+                                systemImage: viewModel.region == nil ? "lasso" : "lasso.badge.sparkles"
+                            )
+                        }
+                        .font(KYFont.callout())
+                        .foregroundStyle(KYColor.primary)
+                    }
+                }
                 if viewModel.canChooseSegmentation {
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
@@ -104,6 +121,19 @@ struct ScanView: View {
             }
             .sheet(isPresented: $showLibrary) {
                 LibraryPicker(image: $pickedImage)
+            }
+            .fullScreenCover(isPresented: $viewModel.isSelectingRegion) {
+                if let image = viewModel.image {
+                    // Every word, not just the ones on screen: a region has to be widened
+                    // from inside the same editor that narrowed it.
+                    RegionSelectView(
+                        image: image,
+                        words: viewModel.words,
+                        region: viewModel.region
+                    ) { region in
+                        viewModel.applyRegion(region)
+                    }
+                }
             }
             .onChange(of: pickedImage) { _, newValue in
                 guard let newValue else { return }

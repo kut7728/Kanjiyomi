@@ -21,9 +21,29 @@ final class ScanViewModel {
     var selectedWordID: RecognizedWord.ID?
     var showDetailWord: RecognizedWord?
 
+    /// The part of the photo the user drew around, or nil for the whole thing. A photo of a
+    /// page turns up every word on it, most of which belong to a sentence the reader is not
+    /// working on, so narrowing the picture is how they narrow the list.
+    private(set) var region: SelectionRegion?
+    var isSelectingRegion = false
+
     /// Which way the words on screen were produced. Drives both the meaning generator and
     /// what saving has to write.
     private(set) var activeMode: SegmentationMode = .dictionary
+
+    /// The words the screen is showing. A region drops the words found outside it, and keeps
+    /// the rest only through the places they were found inside it, so the list, the count and
+    /// the highlights on the photo all describe the same selection.
+    var displayWords: [RecognizedWord] {
+        guard let region else { return words }
+        return words.compactMap { word in
+            let inside = word.quads.filter(region.covers)
+            guard !inside.isEmpty else { return nil }
+            var trimmed = word
+            trimmed.quads = inside
+            return trimmed
+        }
+    }
 
     /// Derived rather than stored. A stored flag has to be set by whichever code path
     /// happens to finish last, and a cancelled generation task never reaches that line,
@@ -32,15 +52,19 @@ final class ScanViewModel {
         !savedCurrentPass
             && !isProcessing
             && !isGeneratingMeanings
-            && words.contains { !$0.meaningKO.isEmpty }
+            && displayWords.contains { !$0.meaningKO.isEmpty }
     }
 
     /// What saving is about to do, beyond adding the words. A ChatGPT pass also replaces
     /// the meanings the cache already holds for these words.
     var saveHint: String {
-        activeMode == .openAI
+        let base = activeMode == .openAI
             ? "ChatGPT가 만든 뜻으로 기존에 저장된 뜻을 덮어씁니다"
             : "이미 단어장에 있는 단어는 그대로 둡니다"
+        // Saving what is on screen rather than everything the photo turned up is worth saying
+        // outright, since the words a region hid are still there to be saved later.
+        guard region != nil else { return base }
+        return "선택한 영역의 \(displayWords.count)개만 저장합니다 · \(base)"
     }
 
     private var savedCurrentPass = false
@@ -55,14 +79,37 @@ final class ScanViewModel {
     @ObservationIgnored private var meaningTask: Task<Void, Never>?
     @ObservationIgnored private var currentRecord: ScanRecord?
 
+    /// Read from the displayed words so a highlight only ever points at a place inside the
+    /// region, even for a word that also appears outside it.
     var selectedWord: RecognizedWord? {
         guard let selectedWordID else { return nil }
-        return words.first { $0.id == selectedWordID }
+        return displayWords.first { $0.id == selectedWordID }
     }
 
     /// Offered only once a scan is on screen, and only when there is another way to split.
     var canChooseSegmentation: Bool {
         image != nil && !isProcessing && SegmentationMode.available.count > 1
+    }
+
+    /// Nothing to narrow down until there are words on the photo.
+    var canSelectRegion: Bool {
+        image != nil && !isProcessing && !words.isEmpty
+    }
+
+    /// Narrows the screen to the part of the photo the user drew around, or reopens the whole
+    /// photo when passed nil.
+    func applyRegion(_ region: SelectionRegion?) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+            self.region = region
+            // The selected word may have been outside what was just drawn, which would leave
+            // the photo magnified on a highlight no row in the list accounts for.
+            if let selectedWordID, !displayWords.contains(where: { $0.id == selectedWordID }) {
+                self.selectedWordID = nil
+            }
+        }
+        // A different set of words on screen is a different thing to save, so the offer comes
+        // back rather than being spent on whichever selection was saved first.
+        savedCurrentPass = false
     }
 
     /// Reads the same photo again with a different way of deciding word boundaries.
@@ -74,6 +121,8 @@ final class ScanViewModel {
         errorMessage = nil
         selectedWordID = nil
         showDetailWord = nil
+        // The region is deliberately left alone: it marks a place on the photo rather than a
+        // set of words, and this reads the same photo again.
         activeMode = mode.resolved
         savedCurrentPass = false
 
@@ -127,6 +176,7 @@ final class ScanViewModel {
         errorMessage = nil
         words = []
         selectedWordID = nil
+        region = nil
         activeMode = mode.resolved
         savedCurrentPass = false
 
@@ -164,6 +214,7 @@ final class ScanViewModel {
         words = record.words
         currentRecord = record
         selectedWordID = nil
+        region = nil
         errorMessage = nil
         showDetailWord = nil
         // The cancel above leaves this set if a previous scan was still generating, which
@@ -187,13 +238,14 @@ final class ScanViewModel {
     @discardableResult
     func saveToVocabulary(modelContext: ModelContext) -> Int {
         // A ChatGPT pass lives only in memory until now, so keeping its words has to keep
-        // the meanings they are being saved with.
+        // the meanings they are being saved with. The cache takes the whole pass either way:
+        // a region decides what to study, not which meanings were worth paying for.
         if activeMode == .openAI {
             MeaningService.shared.persistOpenAIMeanings(words, modelContext: modelContext)
             currentRecord?.meaningsSaved = true
         }
         let added = VocabularyStore.absorb(
-            words,
+            displayWords,
             from: currentRecord?.id,
             modelContext: modelContext
         )
@@ -269,6 +321,8 @@ final class ScanViewModel {
         words = []
         isGeneratingMeanings = false
         selectedWordID = nil
+        region = nil
+        isSelectingRegion = false
         errorMessage = nil
         showDetailWord = nil
         activeMode = .dictionary
