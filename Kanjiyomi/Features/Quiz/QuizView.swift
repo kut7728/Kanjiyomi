@@ -9,6 +9,7 @@ import SwiftUI
 enum QuizMode: String, CaseIterable, Identifiable {
     case wordToMeaning = "단어 → 뜻"
     case meaningToWord = "뜻 → 단어"
+    case readingInference = "읽기 추론"
     var id: String { rawValue }
 }
 
@@ -17,6 +18,13 @@ struct QuizQuestion: Identifiable {
     let prompt: String
     let answer: String
     let choices: [String]
+    var caption: String? = nil
+    var successMessage: String? = nil
+    var isInference: Bool = false
+    var isRelatedBoost: Bool = false
+    var trackedSurface: String? = nil
+    var patternKanji: String? = nil
+    var patternReading: String? = nil
 }
 
 @MainActor
@@ -29,39 +37,66 @@ final class QuizViewModel {
     var selectedChoice: String?
     var isFinished = false
     var hasStarted = false
+    var inferenceUnavailable = false
+    var lastSuccessMessage: String?
 
     var current: QuizQuestion? {
         guard questions.indices.contains(currentIndex) else { return nil }
         return questions[currentIndex]
     }
 
-    func start(with words: [VocabWord]) {
-        guard words.count >= 4 else {
-            questions = []
-            hasStarted = false
-            return
+    func start(
+        with words: [VocabWord],
+        catalog: KanjiCatalog = DictionaryService.shared,
+        modelContext: ModelContext? = nil
+    ) {
+        lastSuccessMessage = nil
+        inferenceUnavailable = false
+        if let modelContext {
+            KanjiPatternStore.sync(from: words, modelContext: modelContext, catalog: catalog)
         }
-        let shuffled = words.shuffled()
-        let count = min(10, shuffled.count)
-        questions = (0..<count).compactMap { index in
-            makeQuestion(correct: shuffled[index], pool: words, mode: mode)
+
+        switch mode {
+        case .readingInference:
+            startInference(words: words, catalog: catalog)
+        case .wordToMeaning, .meaningToWord:
+            startMeaning(words: words, catalog: catalog, modelContext: modelContext)
         }
-        currentIndex = 0
-        score = 0
-        selectedChoice = nil
-        isFinished = false
-        hasStarted = true
     }
 
-    func select(_ choice: String) {
+    func select(_ choice: String, modelContext: ModelContext? = nil) {
         guard selectedChoice == nil, let current else { return }
         selectedChoice = choice
-        if choice == current.answer {
+        let isCorrect = choice == current.answer
+        if isCorrect {
             score += 1
+            lastSuccessMessage = current.successMessage
+        } else {
+            lastSuccessMessage = nil
+        }
+        if let modelContext {
+            if let surface = current.trackedSurface {
+                KanjiPatternStore.recordAttempt(
+                    surface: surface,
+                    mode: mode,
+                    isCorrect: isCorrect,
+                    modelContext: modelContext
+                )
+            }
+            if let kanji = current.patternKanji, let reading = current.patternReading {
+                KanjiPatternStore.recordQuiz(
+                    kanji: kanji,
+                    reading: reading,
+                    isCorrect: isCorrect,
+                    isInference: current.isInference,
+                    modelContext: modelContext
+                )
+            }
         }
     }
 
     func next() {
+        lastSuccessMessage = nil
         if currentIndex + 1 >= questions.count {
             isFinished = true
         } else {
@@ -77,6 +112,81 @@ final class QuizViewModel {
         selectedChoice = nil
         currentIndex = 0
         score = 0
+        inferenceUnavailable = false
+        lastSuccessMessage = nil
+    }
+
+    private func startMeaning(
+        words: [VocabWord],
+        catalog: KanjiCatalog,
+        modelContext: ModelContext?
+    ) {
+        guard words.count >= 4 else {
+            questions = []
+            hasStarted = false
+            return
+        }
+        let shuffled = words.shuffled()
+        let count = min(10, shuffled.count)
+        var built = (0..<count).compactMap { index in
+            makeQuestion(correct: shuffled[index], pool: words, mode: mode)
+        }
+        if let modelContext {
+            let learned = words.map { ($0.displayHeadword, $0.reading, $0.displayMeaning) }
+            for miss in KanjiPatternStore.recentMisses(modelContext: modelContext, limit: 4) {
+                let extras = RelatedReviewBuilder.boostQuestions(
+                    missedSurface: miss.surface,
+                    learned: learned,
+                    catalog: catalog,
+                    limit: 1
+                )
+                built.insert(contentsOf: extras, at: 0)
+                if extras.isEmpty == false { break }
+            }
+            built = Array(built.prefix(10))
+        }
+        questions = built
+        currentIndex = 0
+        score = 0
+        selectedChoice = nil
+        isFinished = false
+        hasStarted = !built.isEmpty
+    }
+
+    private func startInference(words: [VocabWord], catalog: KanjiCatalog) {
+        let learned = words.map { ($0.displayHeadword, $0.reading) }
+        let patterns = PatternDetector.detect(from: learned, catalog: catalog)
+            .filter { $0.status == .discovered || $0.status == .familiar }
+        guard !patterns.isEmpty else {
+            questions = []
+            hasStarted = false
+            inferenceUnavailable = true
+            return
+        }
+        let built = InferenceQuizBuilder.makeQuestions(
+            learned: learned,
+            catalog: catalog,
+            limit: 10
+        ).map { question in
+            QuizQuestion(
+                prompt: question.surface,
+                answer: question.answer,
+                choices: question.choices,
+                caption: "\(question.surface)은 어떻게 읽을까요?",
+                successMessage: "배운 적 없는 단어를 한자 패턴으로 맞혔습니다.",
+                isInference: true,
+                trackedSurface: question.surface,
+                patternKanji: String(question.patternKanji),
+                patternReading: question.patternReading
+            )
+        }
+        questions = built
+        currentIndex = 0
+        score = 0
+        selectedChoice = nil
+        isFinished = false
+        hasStarted = !built.isEmpty
+        inferenceUnavailable = built.isEmpty
     }
 
     private func makeQuestion(correct: VocabWord, pool: [VocabWord], mode: QuizMode) -> QuizQuestion? {
@@ -93,7 +203,8 @@ final class QuizViewModel {
             return QuizQuestion(
                 prompt: correct.displayHeadword,
                 answer: answer,
-                choices: ([answer] + wrong).shuffled()
+                choices: ([answer] + wrong).shuffled(),
+                trackedSurface: correct.displayHeadword
             )
         case .meaningToWord:
             let answer = correct.displayHeadword
@@ -101,14 +212,19 @@ final class QuizViewModel {
             return QuizQuestion(
                 prompt: correct.displayMeaning,
                 answer: answer,
-                choices: ([answer] + wrong).shuffled()
+                choices: ([answer] + wrong).shuffled(),
+                trackedSurface: correct.displayHeadword
             )
+        case .readingInference:
+            return nil
         }
     }
 }
 
 struct QuizView: View {
     @Query(sort: \VocabWord.createdAt, order: .reverse) private var words: [VocabWord]
+    @Query(sort: \UserKanjiPattern.updatedAt, order: .reverse) private var patterns: [UserKanjiPattern]
+    @Environment(\.modelContext) private var modelContext
     @State private var viewModel = QuizViewModel()
 
     var body: some View {
@@ -117,8 +233,8 @@ struct QuizView: View {
             ZStack {
                 KYColor.background.ignoresSafeArea()
 
-                if words.count < 4 {
-                    insufficientState
+                if viewModel.inferenceUnavailable {
+                    inferenceBlockedState
                 } else if viewModel.isFinished {
                     resultState
                 } else if viewModel.hasStarted, let question = viewModel.current {
@@ -128,23 +244,14 @@ struct QuizView: View {
                 }
             }
             .navigationTitle("퀴즈")
+            .onAppear {
+                KanjiPatternStore.sync(
+                    from: words,
+                    modelContext: modelContext,
+                    catalog: DictionaryService.shared
+                )
+            }
         }
-    }
-
-    private var insufficientState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "square.grid.2x2")
-                .font(.system(size: 40, weight: .semibold))
-                .foregroundStyle(KYColor.primary)
-            Text("단어가 4개 이상 필요해요")
-                .font(KYFont.headline())
-                .foregroundStyle(KYColor.textPrimary)
-            Text("단어장에 단어를 더 저장한 뒤 퀴즈를 시작해 보세요.")
-                .font(KYFont.callout())
-                .foregroundStyle(KYColor.textSecondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(40)
     }
 
     private func setupState(viewModel: QuizViewModel) -> some View {
@@ -162,14 +269,30 @@ struct QuizView: View {
                     }
                     .pickerStyle(.segmented)
 
-                    Text("단어장 \(words.count)개로 최대 10문제를 출제합니다.")
+                    Text(setupCaption)
                         .font(KYFont.caption())
                         .foregroundStyle(KYColor.textSecondary)
                 }
             }
 
-            KYPrimaryButton("퀴즈 시작", systemImage: "play.fill") {
-                viewModel.start(with: words)
+            if words.count < 4, viewModel.mode != .readingInference {
+                Text("뜻 퀴즈는 단어가 4개 이상 필요해요.")
+                    .font(KYFont.callout())
+                    .foregroundStyle(KYColor.textSecondary)
+            }
+
+            PatternProgressCard(count: KanjiPatternStore.discoveredCount(in: patterns))
+
+            KYPrimaryButton(
+                "퀴즈 시작",
+                systemImage: "play.fill",
+                isEnabled: viewModel.mode == .readingInference || words.count >= 4
+            ) {
+                viewModel.start(
+                    with: words,
+                    catalog: DictionaryService.shared,
+                    modelContext: modelContext
+                )
             }
         }
         .padding(20)
@@ -189,19 +312,24 @@ struct QuizView: View {
 
             KYCard {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(viewModel.mode == .wordToMeaning ? "이 단어의 뜻은?" : "이 뜻에 맞는 단어는?")
+                    Text(question.caption ?? defaultCaption)
                         .font(KYFont.caption())
                         .foregroundStyle(KYColor.textSecondary)
                     Text(question.prompt)
                         .font(KYFont.largeTitle())
                         .foregroundStyle(KYColor.textPrimary)
+                    if question.isRelatedBoost {
+                        Text("틀린 단어와 같은 한자를 다시 보는 보조 문제입니다.")
+                            .font(KYFont.caption())
+                            .foregroundStyle(KYColor.primary)
+                    }
                 }
             }
 
             VStack(spacing: 10) {
                 ForEach(question.choices, id: \.self) { choice in
                     Button {
-                        viewModel.select(choice)
+                        viewModel.select(choice, modelContext: modelContext)
                     } label: {
                         Text(choice)
                             .font(KYFont.body())
@@ -217,6 +345,12 @@ struct QuizView: View {
             }
 
             if viewModel.selectedChoice != nil {
+                if let message = viewModel.lastSuccessMessage {
+                    Text(message)
+                        .font(KYFont.callout())
+                        .foregroundStyle(KYColor.success)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 KYPrimaryButton(viewModel.currentIndex + 1 >= viewModel.questions.count ? "결과 보기" : "다음") {
                     viewModel.next()
                 }
@@ -244,8 +378,14 @@ struct QuizView: View {
                 .frame(maxWidth: .infinity)
             }
 
+            PatternProgressCard(count: KanjiPatternStore.discoveredCount(in: patterns))
+
             KYPrimaryButton("다시 풀기", systemImage: "arrow.clockwise") {
-                viewModel.start(with: words)
+                viewModel.start(
+                    with: words,
+                    catalog: DictionaryService.shared,
+                    modelContext: modelContext
+                )
             }
             KYSecondaryButton("모드 선택으로") {
                 viewModel.reset()
@@ -253,6 +393,42 @@ struct QuizView: View {
             Spacer()
         }
         .padding(20)
+    }
+
+    private var defaultCaption: String {
+        switch viewModel.mode {
+        case .wordToMeaning: return "이 단어의 뜻은?"
+        case .meaningToWord: return "이 뜻에 맞는 단어는?"
+        case .readingInference: return "이 단어는 어떻게 읽을까요?"
+        }
+    }
+
+    private var setupCaption: String {
+        switch viewModel.mode {
+        case .readingInference:
+            return "익힌 한자 패턴으로 처음 보는 단어의 읽기를 추론합니다."
+        case .wordToMeaning, .meaningToWord:
+            return "단어장 \(words.count)개로 최대 10문제를 출제합니다."
+        }
+    }
+
+    private var inferenceBlockedState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "lightbulb")
+                .font(.system(size: 40, weight: .semibold))
+                .foregroundStyle(KYColor.primary)
+            Text("아직 발견한 패턴이 없어요")
+                .font(KYFont.headline())
+                .foregroundStyle(KYColor.textPrimary)
+            Text("같은 한자가 들어간 단어를 더 모아 보세요. 패턴이 보이면 처음 보는 단어의 읽기를 추론할 수 있습니다.")
+                .font(KYFont.callout())
+                .foregroundStyle(KYColor.textSecondary)
+                .multilineTextAlignment(.center)
+            KYSecondaryButton("모드 선택으로") {
+                viewModel.reset()
+            }
+        }
+        .padding(40)
     }
 
     private var resultMessage: String {

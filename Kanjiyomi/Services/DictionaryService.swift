@@ -13,6 +13,8 @@ nonisolated final class DictionaryService: @unchecked Sendable {
     private var db: OpaquePointer?
     private let lock = NSLock()
     private var existsCache: [String: Bool] = [:]
+    private var kanjiMetaCache: [Character: KanjiMeta]?
+    private var irregularCache: Set<String>?
 
     private init() {
         openDatabase()
@@ -187,6 +189,79 @@ nonisolated final class DictionaryService: @unchecked Sendable {
         return String(cString: c)
     }
 
+    func wordsContaining(_ kanji: Character, limit: Int = 20) -> [DictionaryEntry] {
+        lock.lock()
+        defer { lock.unlock() }
+        guard db != nil, limit > 0 else { return [] }
+
+        let sql = """
+        SELECT surface, reading, pos, gloss FROM kanji_index
+        WHERE kanji = ?1
+        ORDER BY LENGTH(surface), surface
+        LIMIT ?2
+        """
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(stmt) }
+
+        let ns = String(kanji) as NSString
+        sqlite3_bind_text(stmt, 1, ns.utf8String, -1, nil)
+        sqlite3_bind_int(stmt, 2, Int32(limit))
+
+        var results: [DictionaryEntry] = []
+        var seen = Set<String>()
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            let entry = DictionaryEntry(
+                kanji: columnText(stmt, 0),
+                reading: columnText(stmt, 1),
+                partOfSpeech: columnText(stmt, 2),
+                glossEN: columnText(stmt, 3)
+            )
+            let key = "\(entry.kanji)|\(entry.reading)"
+            if seen.insert(key).inserted {
+                results.append(entry)
+            }
+        }
+        return results
+    }
+
+    private func loadKanjiCachesIfNeeded() {
+        if kanjiMetaCache != nil, irregularCache != nil { return }
+        var metas: [Character: KanjiMeta] = [:]
+        var irregulars: Set<String> = []
+
+        if db != nil {
+            let metaSQL = "SELECT kanji, hanja_ko, on_readings, kun_readings, is_irregular_prone FROM kanji_meta"
+            var stmt: OpaquePointer?
+            if sqlite3_prepare_v2(db, metaSQL, -1, &stmt, nil) == SQLITE_OK {
+                while sqlite3_step(stmt) == SQLITE_ROW {
+                    let literal = columnText(stmt, 0)
+                    guard let character = literal.first else { continue }
+                    metas[character] = KanjiMeta(
+                        kanji: character,
+                        hanjaKO: columnText(stmt, 1),
+                        onReadings: columnText(stmt, 2).split(separator: "/").map(String.init).filter { !$0.isEmpty },
+                        kunReadings: columnText(stmt, 3).split(separator: "/").map(String.init).filter { !$0.isEmpty },
+                        isIrregularProne: sqlite3_column_int(stmt, 4) != 0
+                    )
+                }
+            }
+            sqlite3_finalize(stmt)
+
+            let irregularSQL = "SELECT surface, reading FROM irregular_words"
+            var irregularStmt: OpaquePointer?
+            if sqlite3_prepare_v2(db, irregularSQL, -1, &irregularStmt, nil) == SQLITE_OK {
+                while sqlite3_step(irregularStmt) == SQLITE_ROW {
+                    irregulars.insert("\(columnText(irregularStmt, 0))|\(columnText(irregularStmt, 1))")
+                }
+            }
+            sqlite3_finalize(irregularStmt)
+        }
+
+        kanjiMetaCache = metas
+        irregularCache = irregulars
+    }
+
     private func uniqueNonEmpty(_ values: [String]) -> [String] {
         var seen = Set<String>()
         var result: [String] = []
@@ -196,5 +271,21 @@ nonisolated final class DictionaryService: @unchecked Sendable {
             }
         }
         return result
+    }
+}
+
+extension DictionaryService: KanjiCatalog {
+    func meta(for kanji: Character) -> KanjiMeta? {
+        lock.lock()
+        defer { lock.unlock() }
+        loadKanjiCachesIfNeeded()
+        return kanjiMetaCache?[kanji]
+    }
+
+    func isIrregular(surface: String, reading: String) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        loadKanjiCachesIfNeeded()
+        return irregularCache?.contains("\(surface)|\(reading)") ?? false
     }
 }

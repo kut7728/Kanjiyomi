@@ -9,7 +9,13 @@ import SwiftUI
 @main
 struct KanjiyomiApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([VocabWord.self, WordCache.self, ScanRecord.self])
+        let schema = Schema([
+            VocabWord.self,
+            WordCache.self,
+            ScanRecord.self,
+            UserKanjiPattern.self,
+            QuizAttempt.self
+        ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [config])

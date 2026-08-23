@@ -8,6 +8,7 @@ import SwiftUI
 
 struct VocabularyView: View {
     @Query(sort: \VocabWord.createdAt, order: .reverse) private var words: [VocabWord]
+    @Query(sort: \UserKanjiPattern.updatedAt, order: .reverse) private var patterns: [UserKanjiPattern]
     @Environment(\.modelContext) private var modelContext
 
     @State private var selection = Set<VocabWord.ID>()
@@ -26,6 +27,13 @@ struct VocabularyView: View {
             }
             .background(KYColor.background)
             .navigationTitle(title)
+            .onAppear {
+                KanjiPatternStore.sync(
+                    from: words,
+                    modelContext: modelContext,
+                    catalog: DictionaryService.shared
+                )
+            }
             .environment(\.editMode, $editMode)
             .toolbar {
                 // Select all sits next to Done rather than beside Delete, so the right edge
@@ -133,7 +141,8 @@ struct VocabularyView: View {
     @ViewBuilder
     private var wordCount: some View {
         if !words.isEmpty {
-            Text("\(words.count)개")
+            let patternCount = KanjiPatternStore.discoveredCount(in: patterns)
+            Text(patternCount > 0 ? "\(words.count)단어 · 패턴 \(patternCount)" : "\(words.count)개")
                 .font(KYFont.caption())
                 .foregroundStyle(KYColor.textSecondary)
         }

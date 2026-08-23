@@ -8,6 +8,7 @@ import SwiftUI
 
 struct WordDetailView: View {
     let word: RecognizedWord
+    @Query(sort: \VocabWord.createdAt, order: .reverse) private var savedWords: [VocabWord]
     @Environment(\.modelContext) private var modelContext
     /// Absent wherever this screen is shown outside the tab view, and then there is no scan
     /// tab to send the user to either.
@@ -74,6 +75,15 @@ struct WordDetailView: View {
                                 .font(KYFont.headline())
                                 .foregroundStyle(KYColor.textPrimary)
                         }
+                    }
+
+                    if !KanjiExtractor.kanjiCharacters(in: word.displayHeadword).isEmpty {
+                        KanjiPatternSection(
+                            word: word,
+                            savedWords: savedWords,
+                            catalog: DictionaryService.shared,
+                            newlyDiscovered: newlyDiscoveredPatterns
+                        )
                     }
 
                     KYCard {
@@ -145,7 +155,14 @@ struct WordDetailView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.86), value: copyToastMessage)
         .navigationTitle("단어 상세")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { refreshSavedState() }
+        .onAppear {
+            refreshSavedState()
+            KanjiPatternStore.sync(
+                from: savedWords,
+                modelContext: modelContext,
+                catalog: DictionaryService.shared
+            )
+        }
         .task { await loadExamples() }
     }
 
@@ -165,6 +182,18 @@ struct WordDetailView: View {
                     copyToastMessage = nil
                 }
             }
+        }
+    }
+
+    private var newlyDiscoveredPatterns: [PatternObservation] {
+        PatternDetector.detect(
+            from: savedWords.map { ($0.displayHeadword, $0.reading) },
+            catalog: DictionaryService.shared
+        )
+        .filter {
+            ($0.status == .discovered || $0.status == .familiar)
+                && $0.sampleWords.contains(word.displayHeadword)
+                && $0.wordCount == PatternDetector.discoverThreshold
         }
     }
 

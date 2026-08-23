@@ -165,7 +165,11 @@ def main() -> int:
     rows = parse_and_build(cache_gz, OUTPUT_PATH)
     size_mb = os.path.getsize(OUTPUT_PATH) / (1024 * 1024)
     print("Done: {} rows, {:.1f} MB → {}".format(rows, size_mb, OUTPUT_PATH))
-    return 0
+
+    layer = os.path.join(SCRIPT_DIR, "build_kanji_layer.py")
+    print("Adding kanji pattern tables …")
+    status = os.system("python3 {}".format(layer))
+    return 0 if status == 0 else 1
 
 
 if __name__ == "__main__":
