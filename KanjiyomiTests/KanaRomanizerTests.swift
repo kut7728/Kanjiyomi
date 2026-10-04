@@ -9,7 +9,14 @@ import Testing
 struct KanaRomanizerTests {
     @Test func hiraganaBasic() {
         #expect(KanaRomanizer.toHangul("たべる") == "타베루")
-        #expect(KanaRomanizer.toHangul("こんにちは") == "코응니치하")
+        #expect(KanaRomanizer.toHangul("こんにちは") == "콘니치하")
+    }
+
+    @Test func nAsFinalConsonant() {
+        #expect(KanaRomanizer.toHangul("ほんじつ") == "혼지츠")
+        #expect(KanaRomanizer.toHangul("ぜんぴん") == "젠핀")
+        #expect(KanaRomanizer.toHangul("セール") == "세루")
+        #expect(KanaRomanizer.toHangul("ん") == "응")
     }
 
     @Test func katakanaAndDigraph() {

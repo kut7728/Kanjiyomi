@@ -32,7 +32,11 @@ enum KanaRomanizer {
                 // Youon: きゃ etc. — already in digraphMap; also handle しゃ style via digraph
             }
             let mono = String(normalized[index])
-            if let hangul = monoMap[mono] {
+            if mono == "ん", let syllable = appendingNieunFinal(to: result.last) {
+                // ん closes the previous syllable as ㄴ, the way Korean writes it (ほんじつ → 혼지츠).
+                result.removeLast()
+                result.append(syllable)
+            } else if let hangul = monoMap[mono] {
                 result += hangul
             } else if isJapanesePunctuation(mono) {
                 // skip
@@ -58,6 +62,15 @@ enum KanaRomanizer {
             }
             return Character(scalar)
         })
+    }
+
+    /// The syllable with ㄴ as its final, or nil when there is no open Hangul syllable to close.
+    private static func appendingNieunFinal(to character: Character?) -> Character? {
+        guard let scalar = character?.unicodeScalars.first,
+              character?.unicodeScalars.count == 1,
+              (0xAC00...0xD7A3).contains(scalar.value),
+              (scalar.value - 0xAC00) % 28 == 0 else { return nil }
+        return Character(UnicodeScalar(scalar.value + 4)!)
     }
 
     private static func isJapanesePunctuation(_ s: String) -> Bool {
