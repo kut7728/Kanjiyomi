@@ -16,12 +16,20 @@ enum KanjiPatternStore {
         let existing = (try? modelContext.fetch(FetchDescriptor<UserKanjiPattern>())) ?? []
         var index = Dictionary(uniqueKeysWithValues: existing.map { ($0.key, $0) })
 
+        // A pattern no saved word shows any more has nothing left to count; dropping the row
+        // keeps deleted words out of the learned-pattern total.
+        let observedKeys = Set(observations.map { "\($0.kanji)|\($0.observedReading)" })
+        for row in existing where !observedKeys.contains(row.key) {
+            modelContext.delete(row)
+            index[row.key] = nil
+        }
+
         for observation in observations {
             let key = "\(observation.kanji)|\(observation.observedReading)"
             if let row = index[key] {
                 row.seenWordCount = observation.wordCount
                 row.hanjaKO = observation.hanjaKO
-                row.status = observation.status
+                row.status = status(detected: observation.status, inferenceCorrect: row.inferenceCorrect)
                 row.sampleWords = observation.sampleWords.joined(separator: "、")
                 row.updatedAt = .now
             } else {
@@ -58,11 +66,17 @@ enum KanjiPatternStore {
         if isCorrect && isInference { row.inferenceCorrect += 1 }
         row.lastReviewedAt = .now
         row.updatedAt = .now
-        if row.inferenceCorrect >= 2, row.status != .familiar {
-            row.status = .familiar
-        }
+        row.status = status(detected: row.status, inferenceCorrect: row.inferenceCorrect)
         try? modelContext.save()
     }
+
+    /// Inferring a pattern's reading twice shows it is known, however few saved words carry it,
+    /// so that earns familiar on top of whatever the word count alone gives.
+    nonisolated static func status(detected: PatternStatus, inferenceCorrect: Int) -> PatternStatus {
+        inferenceCorrect >= familiarInferenceCount ? .familiar : detected
+    }
+
+    nonisolated static let familiarInferenceCount = 2
 
     static func recordAttempt(
         surface: String,

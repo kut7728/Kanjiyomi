@@ -8,36 +8,40 @@ import SQLite3
 
 /// Lock-protected so lookups can run off the main actor during recognition.
 nonisolated final class DictionaryService: @unchecked Sendable {
-    static let shared = DictionaryService()
+    static let shared = DictionaryService(
+        databaseURL: Bundle.main.url(forResource: "jmdict", withExtension: "sqlite"),
+        koreanURL: Bundle.main.url(forResource: "korean", withExtension: "sqlite")
+    )
 
     private var db: OpaquePointer?
+    private var koreanDB: OpaquePointer?
     private let lock = NSLock()
     private var existsCache: [String: Bool] = [:]
     private var kanjiMetaCache: [Character: KanjiMeta]?
     private var irregularCache: Set<String>?
 
-    private init() {
-        openDatabase()
+    init(databaseURL: URL?, koreanURL: URL? = nil) {
+        db = Self.openDatabase(at: databaseURL)
+        koreanDB = Self.openDatabase(at: koreanURL)
     }
 
     deinit {
         if let db {
             sqlite3_close(db)
         }
+        if let koreanDB { sqlite3_close(koreanDB) }
     }
 
-    private func openDatabase() {
-        guard let url = Bundle.main.url(forResource: "jmdict", withExtension: "sqlite") else {
-            print("[DictionaryService] jmdict.sqlite not found in bundle")
-            return
-        }
+    private static func openDatabase(at url: URL?) -> OpaquePointer? {
+        guard let url else { return nil }
         var handle: OpaquePointer?
         let flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX
         if sqlite3_open_v2(url.path, &handle, flags, nil) == SQLITE_OK {
-            db = handle
+            return handle
         } else {
-            print("[DictionaryService] Failed to open database")
+            print("[DictionaryService] Failed to open \(url.lastPathComponent)")
             if let handle { sqlite3_close(handle) }
+            return nil
         }
     }
 
@@ -60,7 +64,8 @@ nonisolated final class DictionaryService: @unchecked Sendable {
                 kanji: entry.kanji,
                 reading: entry.reading.isEmpty ? "" : prefix + entry.reading,
                 partOfSpeech: entry.partOfSpeech,
-                glossEN: entry.glossEN
+                glossEN: entry.glossEN,
+                glossKO: entry.glossKO
             )
         }
         return nil
@@ -143,12 +148,7 @@ nonisolated final class DictionaryService: @unchecked Sendable {
         var results: [DictionaryEntry] = []
         var seen = Set<String>()
         while sqlite3_step(stmt) == SQLITE_ROW {
-            let entry = DictionaryEntry(
-                kanji: columnText(stmt, 0),
-                reading: columnText(stmt, 1),
-                partOfSpeech: columnText(stmt, 2),
-                glossEN: columnText(stmt, 3)
-            )
+            let entry = entry(from: stmt)
             let key = "\(entry.kanji)|\(entry.reading)"
             if seen.insert(key).inserted {
                 results.append(entry)
@@ -177,11 +177,31 @@ nonisolated final class DictionaryService: @unchecked Sendable {
         sqlite3_bind_text(stmt, 1, ns.utf8String, -1, nil)
 
         guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        return entry(from: stmt)
+    }
+
+    private func entry(from stmt: OpaquePointer?) -> DictionaryEntry {
         let kanji = columnText(stmt, 0)
         let reading = columnText(stmt, 1)
-        let pos = columnText(stmt, 2)
-        let gloss = columnText(stmt, 3)
-        return DictionaryEntry(kanji: kanji, reading: reading, partOfSpeech: pos, glossEN: gloss)
+        return DictionaryEntry(
+            kanji: kanji,
+            reading: reading,
+            partOfSpeech: columnText(stmt, 2),
+            glossEN: columnText(stmt, 3),
+            glossKO: koreanMeaning(written: kanji.isEmpty ? reading : kanji, reading: reading)
+        )
+    }
+
+    private func koreanMeaning(written: String, reading: String) -> String {
+        guard let koreanDB else { return "" }
+        var stmt: OpaquePointer?
+        let sql = "SELECT meaning FROM meanings WHERE written = ?1 AND reading = ?2"
+        guard sqlite3_prepare_v2(koreanDB, sql, -1, &stmt, nil) == SQLITE_OK else { return "" }
+        defer { sqlite3_finalize(stmt) }
+        let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+        sqlite3_bind_text(stmt, 1, written, -1, transient)
+        sqlite3_bind_text(stmt, 2, reading, -1, transient)
+        return sqlite3_step(stmt) == SQLITE_ROW ? columnText(stmt, 0) : ""
     }
 
     private func columnText(_ stmt: OpaquePointer?, _ index: Int32) -> String {
@@ -211,12 +231,7 @@ nonisolated final class DictionaryService: @unchecked Sendable {
         var results: [DictionaryEntry] = []
         var seen = Set<String>()
         while sqlite3_step(stmt) == SQLITE_ROW {
-            let entry = DictionaryEntry(
-                kanji: columnText(stmt, 0),
-                reading: columnText(stmt, 1),
-                partOfSpeech: columnText(stmt, 2),
-                glossEN: columnText(stmt, 3)
-            )
+            let entry = entry(from: stmt)
             let key = "\(entry.kanji)|\(entry.reading)"
             if seen.insert(key).inserted {
                 results.append(entry)
@@ -231,7 +246,7 @@ nonisolated final class DictionaryService: @unchecked Sendable {
         var irregulars: Set<String> = []
 
         if db != nil {
-            let metaSQL = "SELECT kanji, hanja_ko, on_readings, kun_readings, is_irregular_prone FROM kanji_meta"
+            let metaSQL = "SELECT kanji, hanja_ko, on_readings, kun_readings FROM kanji_meta"
             var stmt: OpaquePointer?
             if sqlite3_prepare_v2(db, metaSQL, -1, &stmt, nil) == SQLITE_OK {
                 while sqlite3_step(stmt) == SQLITE_ROW {
@@ -241,8 +256,7 @@ nonisolated final class DictionaryService: @unchecked Sendable {
                         kanji: character,
                         hanjaKO: columnText(stmt, 1),
                         onReadings: columnText(stmt, 2).split(separator: "/").map(String.init).filter { !$0.isEmpty },
-                        kunReadings: columnText(stmt, 3).split(separator: "/").map(String.init).filter { !$0.isEmpty },
-                        isIrregularProne: sqlite3_column_int(stmt, 4) != 0
+                        kunReadings: columnText(stmt, 3).split(separator: "/").map(String.init).filter { !$0.isEmpty }
                     )
                 }
             }

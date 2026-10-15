@@ -20,7 +20,7 @@ final class WordCache {
     var exampleKO1: String
     var exampleJP2: String
     var exampleKO2: String
-    /// Which generator wrote `meaningKO`. Empty on rows saved before this was tracked, and
+    /// Which source supplied `meaningKO`. Empty on rows saved before this was tracked, and
     /// on rows that only ever held the dictionary half. Lets a ChatGPT pass tell which of
     /// its words already have a ChatGPT meaning and which would have to be paid for again.
     var meaningSource: String = ""
@@ -59,6 +59,7 @@ final class WordCache {
     }
 
     enum MeaningSource: String {
+        case dictionary
         /// Apple's on-device model, used by both the dictionary and AI split modes.
         case foundation
         case openAI = "openai"

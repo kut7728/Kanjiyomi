@@ -33,7 +33,8 @@ struct StubKanjiCatalog: KanjiCatalog {
             "学": KanjiMeta(kanji: "学", hanjaKO: "학", onReadings: ["がく"], kunReadings: ["まなぶ"]),
             "国": KanjiMeta(kanji: "国", hanjaKO: "국", onReadings: ["こく"], kunReadings: ["くに"]),
             "新": KanjiMeta(kanji: "新", hanjaKO: "신", onReadings: ["しん"], kunReadings: ["あたらしい", "あらた"]),
-            "安": KanjiMeta(kanji: "安", hanjaKO: "안", onReadings: ["あん"], kunReadings: ["やすい"])
+            "安": KanjiMeta(kanji: "安", hanjaKO: "안", onReadings: ["あん"], kunReadings: ["やすい"]),
+            "民": KanjiMeta(kanji: "民", hanjaKO: "민", onReadings: ["みん"], kunReadings: ["たみ"])
         ],
         irregulars: ["今日|きょう", "大人|おとな", "一人|ひとり", "為替|かわせ", "梅雨|つゆ"]
     )
@@ -198,6 +199,20 @@ struct InferenceQuizBuilderTests {
         #expect(Set(question?.choices ?? []).count == 4)
     }
 
+    @Test func swapsOnlyThePatternKanjisReading() {
+        // 営 is the second kanji here, so a wrong choice keeps みん and changes only えい.
+        let question = InferenceQuizBuilder.makeQuestion(
+            learned: [("経営", "けいえい"), ("国営", "こくえい")],
+            candidates: [
+                DictionaryEntry(kanji: "民営", reading: "みんえい", partOfSpeech: "noun", glossEN: "private management")
+            ],
+            catalog: catalog
+        )
+        #expect(question?.answer == "みんえい")
+        #expect(Set(question?.choices ?? []).count == 4)
+        #expect(question?.choices.allSatisfy { $0.hasPrefix("みん") } == true)
+    }
+
     @Test func skipsWordsAlreadyLearned() {
         let question = InferenceQuizBuilder.makeQuestion(
             learned: [("経営", "けいえい"), ("経済", "けいざい")],
@@ -223,5 +238,26 @@ struct RelatedReviewBuilderTests {
         )
         #expect(extras.contains { $0.prompt == "経験" || $0.prompt == "経営" })
         #expect(extras.count <= 2)
+    }
+}
+
+struct QuizChoiceTests {
+    @Test func neverRepeatsAChoice() {
+        let choices = QuizViewModel.choices(answer: "경제", candidates: ["경험", "경험", "경제", "경영", "서류"])
+        #expect(choices?.count == 4)
+        #expect(Set(choices ?? []).count == 4)
+        #expect(choices?.contains("경제") == true)
+    }
+
+    @Test func givesUpWithoutThreeDistinctWrongChoices() {
+        #expect(QuizViewModel.choices(answer: "경제", candidates: ["경험", "경험", "경제", "경영"]) == nil)
+    }
+}
+
+struct PatternStatusTests {
+    @Test func inferenceEarnsFamiliarWhateverTheWordCount() {
+        #expect(KanjiPatternStore.status(detected: .discovered, inferenceCorrect: 2) == .familiar)
+        #expect(KanjiPatternStore.status(detected: .emerging, inferenceCorrect: 1) == .emerging)
+        #expect(KanjiPatternStore.status(detected: .familiar, inferenceCorrect: 0) == .familiar)
     }
 }

@@ -54,9 +54,15 @@ struct WordDetailView: View {
                                     .foregroundStyle(KYColor.textSecondary)
                             }
                             if !word.hangul.isEmpty {
-                                Label(word.hangul, systemImage: "speaker.wave.2.fill")
-                                    .font(KYFont.headline())
-                                    .foregroundStyle(KYColor.primary)
+                                Button {
+                                    Pronouncer.shared.speak(word.reading.isEmpty ? word.displayHeadword : word.reading)
+                                } label: {
+                                    Label(word.hangul, systemImage: "speaker.wave.2.fill")
+                                        .font(KYFont.headline())
+                                        .foregroundStyle(KYColor.primary)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("발음 듣기, \(word.hangul)")
                             }
                             if !partOfSpeech.isEmpty {
                                 Text(partOfSpeech)

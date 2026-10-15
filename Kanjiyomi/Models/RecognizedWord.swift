@@ -70,4 +70,7 @@ struct DictionaryEntry: Hashable, Sendable {
     var reading: String
     var partOfSpeech: String
     var glossEN: String
+    var glossKO: String = ""
+
+    var displayMeaning: String { glossKO.isEmpty ? glossEN : glossKO }
 }

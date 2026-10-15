@@ -17,3 +17,7 @@ xcuserdata/
 
 # macOS
 .DS_Store
+
+# Dictionary build cache
+__pycache__/
+tools/.cache/

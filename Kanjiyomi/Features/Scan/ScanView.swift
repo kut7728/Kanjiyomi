@@ -3,6 +3,7 @@
 //  Kanjiyomi
 //
 
+import AVFoundation
 import SwiftData
 import SwiftUI
 import UIKit
@@ -15,6 +16,7 @@ struct ScanView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \ScanRecord.createdAt, order: .reverse) private var records: [ScanRecord]
     @State private var showCamera = false
+    @State private var showCameraDenied = false
     @State private var showLibrary = false
     @State private var pickedImage: UIImage?
     /// Carried over to the next photo. Only ever holds an on-device mode: ChatGPT bills the
@@ -121,6 +123,17 @@ struct ScanView: View {
             }
             .sheet(isPresented: $showLibrary) {
                 LibraryPicker(image: $pickedImage)
+            }
+            .alert("카메라 접근이 꺼져 있어요", isPresented: $showCameraDenied) {
+                Button("설정 열기") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button("앨범에서 선택") { showLibrary = true }
+                Button("취소", role: .cancel) {}
+            } message: {
+                Text("설정에서 Kanjiyomi의 카메라 접근을 켜면 바로 촬영할 수 있어요. 앨범에서 사진을 골라도 돼요.")
             }
             .fullScreenCover(isPresented: $viewModel.isSelectingRegion) {
                 if let image = viewModel.image {
@@ -234,11 +247,7 @@ struct ScanView: View {
                     .foregroundStyle(KYColor.textSecondary)
 
                 KYPrimaryButton("카메라로 촬영", systemImage: "camera.fill") {
-                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                        showCamera = true
-                    } else {
-                        showLibrary = true
-                    }
+                    openCamera()
                 }
                 KYSecondaryButton("앨범에서 선택", systemImage: "photo.on.rectangle") {
                     showLibrary = true
@@ -289,7 +298,23 @@ struct ScanView: View {
         return formatter
     }()
 
+    /// The picker asks for camera access itself the first time. Once access is refused it
+    /// would only show a black screen, so point the user to Settings instead.
+    private func openCamera() {
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            showLibrary = true
+            return
+        }
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .denied, .restricted:
+            showCameraDenied = true
+        default:
+            showCamera = true
+        }
+    }
+
     private func delete(_ record: ScanRecord) {
+        VocabularyStore.forgetScan(record.id, modelContext: modelContext)
         modelContext.delete(record)
         try? modelContext.save()
     }

@@ -1,1 +1,2 @@
 Kanjiyomi/Resources/*.sqlite filter=lfs diff=lfs merge=lfs -text
+Kanjiyomi/Resources/korean.sqlite -filter -diff -merge -text

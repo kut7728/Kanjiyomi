@@ -1,0 +1,1 @@
+작업 규칙은 [AGENTS.md](AGENTS.md)를 따른다.

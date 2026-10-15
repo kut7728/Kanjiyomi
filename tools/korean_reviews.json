@@ -1,0 +1,1738 @@
+{
+  "review_date": "2026-10-15",
+  "random_seed": 20261015,
+  "method": "Manual sample audit of 100 deterministic generated rows, eight named everyday pairs (including both 果物 readings), and two explicit exclusions. Compared each source Korean gloss, Japanese spelling/reading, and available JMdict English glosses. This is a sample, not full-dataset review.",
+  "reviewed": [
+    {
+      "written": "意気込み",
+      "reading": "いきごみ",
+      "source": "krdict",
+      "source_id": "24094:1",
+      "source_gloss": "의욕",
+      "jmdict_english_glosses": [
+        "ardor",
+        "enthusiasm"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=24094",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "祝う",
+      "reading": "いわう",
+      "source": "wiktionary",
+      "source_id": "祝う#1",
+      "source_gloss": "축하하다",
+      "jmdict_english_glosses": [
+        "to celebrate",
+        "to congratulate",
+        "to drink in celebration",
+        "to observe",
+        "to pray for",
+        "to present in celebration",
+        "to wish for"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E7%A5%9D%E3%81%86",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "ギャング",
+      "reading": "ギャング",
+      "source": "krdict",
+      "source_id": "21077:1,84861:1,84862:1",
+      "source_gloss": "갱; 폭력단; 폭력배",
+      "jmdict_english_glosses": [
+        "gang",
+        "gangster"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=21077;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=84861;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=84862",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "火砲",
+      "reading": "かほう",
+      "source": "krdict",
+      "source_id": "87705:1",
+      "source_gloss": "화포",
+      "jmdict_english_glosses": [
+        "artillery",
+        "cannon",
+        "gun"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=87705",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "きっぱり",
+      "reading": "きっぱり",
+      "source": "wiktionary",
+      "source_id": "きっぱり#1",
+      "source_gloss": "딱 잘라",
+      "jmdict_english_glosses": [
+        "clearly",
+        "decisively",
+        "definitely",
+        "distinctly",
+        "flatly",
+        "plainly",
+        "resolutely"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E3%81%8D%E3%81%A3%E3%81%B1%E3%82%8A",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "肩",
+      "reading": "かた",
+      "source": "wiktionary",
+      "source_id": "肩#1",
+      "source_gloss": "어깨",
+      "jmdict_english_glosses": [
+        "shoulder"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E8%82%A9",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "エンゲージ",
+      "reading": "エンゲージ",
+      "source": "krdict",
+      "source_id": "67018:1",
+      "source_gloss": "약혼",
+      "jmdict_english_glosses": [
+        "engage",
+        "engagement"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=67018",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "教理",
+      "reading": "きょうり",
+      "source": "krdict",
+      "source_id": "30695:1",
+      "source_gloss": "교리",
+      "jmdict_english_glosses": [
+        "doctrine"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=30695",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "主導者",
+      "reading": "しゅどうしゃ",
+      "source": "krdict",
+      "source_id": "66881:1,75961:1",
+      "source_gloss": "앞잡이; 주동자",
+      "jmdict_english_glosses": [
+        "leader",
+        "moving spirit",
+        "originator",
+        "prime mover"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=66881;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=75961",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "再生",
+      "reading": "さいせい",
+      "source": "wiktionary",
+      "source_id": "再生#1",
+      "source_gloss": "재생",
+      "jmdict_english_glosses": [
+        "coming to life again",
+        "playback",
+        "rebirth",
+        "recall",
+        "reclamation",
+        "recovery",
+        "recycling",
+        "reformation",
+        "regeneration",
+        "regrowth",
+        "rehabilitation",
+        "reincarnation",
+        "restoration to life",
+        "resuscitation",
+        "retrieval",
+        "views"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E5%86%8D%E7%94%9F",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "球形",
+      "reading": "きゅうけい",
+      "source": "krdict",
+      "source_id": "36762:1",
+      "source_gloss": "구형",
+      "jmdict_english_glosses": [
+        "globular shape",
+        "spherical shape"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=36762",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "ソ",
+      "reading": "ソ",
+      "source": "wiktionary",
+      "source_id": "ソ#1",
+      "source_gloss": "가타카나 표기 サ행의 5번째 문자",
+      "jmdict_english_glosses": [
+        "g",
+        "so",
+        "soh",
+        "soviet union"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E3%82%BD",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "自業自得",
+      "reading": "じごうじとく",
+      "source": "wiktionary",
+      "source_id": "自業自得#1",
+      "source_gloss": "자업자득",
+      "jmdict_english_glosses": [
+        "getting one's just deserts",
+        "paying for one's mistakes",
+        "reap what you sow",
+        "suffering the consequences"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E8%87%AA%E6%A5%AD%E8%87%AA%E5%BE%97",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "蕃殖",
+      "reading": "はんしょく",
+      "source": "wiktionary",
+      "source_id": "蕃殖#1",
+      "source_gloss": "번식",
+      "jmdict_english_glosses": [
+        "breeding",
+        "increase",
+        "multiplication",
+        "propagation",
+        "reproduction"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E8%95%83%E6%AE%96",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "聖職",
+      "reading": "せいしょく",
+      "source": "krdict",
+      "source_id": "84652:2",
+      "source_gloss": "성직",
+      "jmdict_english_glosses": [
+        "esteemed profession",
+        "holy orders",
+        "ministry",
+        "priesthood",
+        "venerable vocation"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=84652",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "キャスチング",
+      "reading": "キャスチング",
+      "source": "krdict",
+      "source_id": "83100:1",
+      "source_gloss": "캐스팅",
+      "jmdict_english_glosses": [
+        "casting"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=83100",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "ストライク",
+      "reading": "ストライク",
+      "source": "krdict",
+      "source_id": "65211:1,65211:2",
+      "source_gloss": "스트라이크",
+      "jmdict_english_glosses": [
+        "strike"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=65211",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "裏表紙",
+      "reading": "うらびょうし",
+      "source": "krdict",
+      "source_id": "67069:1",
+      "source_gloss": "뒤표지",
+      "jmdict_english_glosses": [
+        "back cover"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=67069",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "簿記",
+      "reading": "ぼき",
+      "source": "wiktionary",
+      "source_id": "簿記#1",
+      "source_gloss": "부기",
+      "jmdict_english_glosses": [
+        "bookkeeping"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E7%B0%BF%E8%A8%98",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "竹の子",
+      "reading": "たけのこ",
+      "source": "krdict",
+      "source_id": "76704:1",
+      "source_gloss": "죽순",
+      "jmdict_english_glosses": [
+        "bamboo shoot",
+        "young, inexperienced doctor"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=76704",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "伴奏",
+      "reading": "ばんそう",
+      "source": "wiktionary",
+      "source_id": "伴奏#1",
+      "source_gloss": "반주",
+      "jmdict_english_glosses": [
+        "accompaniment"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E4%BC%B4%E5%A5%8F",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "クレカ",
+      "reading": "クレカ",
+      "source": "krdict",
+      "source_id": "81373:1",
+      "source_gloss": "크레디트 카드",
+      "jmdict_english_glosses": [
+        "credit card"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=81373",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "全速力",
+      "reading": "ぜんそくりょく",
+      "source": "krdict",
+      "source_id": "74339:1",
+      "source_gloss": "전속력",
+      "jmdict_english_glosses": [
+        "full speed"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=74339",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "十日",
+      "reading": "とおか",
+      "source": "wiktionary",
+      "source_id": "十日#1",
+      "source_gloss": "십일, 10일",
+      "jmdict_english_glosses": [
+        "10th day of the month",
+        "ten days"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E5%8D%81%E6%97%A5",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "一世",
+      "reading": "いっせい",
+      "source": "krdict",
+      "source_id": "72814:1,72814:2",
+      "source_gloss": "일세",
+      "jmdict_english_glosses": [
+        "first-generation japanese",
+        "generation",
+        "issei",
+        "lifetime",
+        "the age",
+        "the day",
+        "the first"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=72814",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "急制動",
+      "reading": "きゅうせいどう",
+      "source": "krdict",
+      "source_id": "41493:1",
+      "source_gloss": "급제동",
+      "jmdict_english_glosses": [
+        "sudden braking"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=41493",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "余談",
+      "reading": "よだん",
+      "source": "krdict",
+      "source_id": "28208:1",
+      "source_gloss": "여담",
+      "jmdict_english_glosses": [
+        "digression"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=28208",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "バカンス",
+      "reading": "バカンス",
+      "source": "krdict",
+      "source_id": "57539:1",
+      "source_gloss": "바캉스",
+      "jmdict_english_glosses": [
+        "holidays",
+        "vacation"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=57539",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "不確実性",
+      "reading": "ふかくじつせい",
+      "source": "krdict",
+      "source_id": "61034:1",
+      "source_gloss": "불확실성",
+      "jmdict_english_glosses": [
+        "indeterminacy",
+        "unauthenticity",
+        "uncertainty",
+        "unreliability"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=61034",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "木枕",
+      "reading": "こまくら",
+      "source": "krdict",
+      "source_id": "55958:1",
+      "source_gloss": "목침",
+      "jmdict_english_glosses": [
+        "wooden pillow"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=55958",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "キッチン用品",
+      "reading": "キッチンようひん",
+      "source": "krdict",
+      "source_id": "75193:1",
+      "source_gloss": "주방 용품",
+      "jmdict_english_glosses": [
+        "kitchen utensils",
+        "kitchenware"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=75193",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "労働組合",
+      "reading": "ろうどうくみあい",
+      "source": "krdict",
+      "source_id": "40088:1",
+      "source_gloss": "노동조합",
+      "jmdict_english_glosses": [
+        "labor union",
+        "labour union",
+        "trade union"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=40088",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "高額",
+      "reading": "こうがく",
+      "source": "krdict",
+      "source_id": "18777:1",
+      "source_gloss": "고액",
+      "jmdict_english_glosses": [
+        "large amount",
+        "large denomination",
+        "large sum"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=18777",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "透明",
+      "reading": "とうめい",
+      "source": "wiktionary",
+      "source_id": "透明#1",
+      "source_gloss": "투명; 투명한",
+      "jmdict_english_glosses": [
+        "clear",
+        "transparent"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E9%80%8F%E6%98%8E",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "已後",
+      "reading": "いご",
+      "source": "krdict",
+      "source_id": "70757:2",
+      "source_gloss": "이후",
+      "jmdict_english_glosses": [
+        "after",
+        "after this",
+        "from now on",
+        "hereafter",
+        "since",
+        "thereafter"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=70757",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "マンネリズム",
+      "reading": "マンネリズム",
+      "source": "krdict",
+      "source_id": "51743:1",
+      "source_gloss": "매너리즘",
+      "jmdict_english_glosses": [
+        "becoming stereotyped",
+        "getting stuck in a rut",
+        "humdrum",
+        "mannerism"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=51743",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "按摩",
+      "reading": "あんま",
+      "source": "krdict",
+      "source_id": "23383:1",
+      "source_gloss": "안마",
+      "jmdict_english_glosses": [
+        "blind person",
+        "massage",
+        "massager",
+        "masseur",
+        "masseuse"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=23383",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "非常識",
+      "reading": "ひじょうしき",
+      "source": "krdict",
+      "source_id": "56024:1",
+      "source_gloss": "몰상식",
+      "jmdict_english_glosses": [
+        "absurdity",
+        "irrationality",
+        "lack of common sense",
+        "senselessness",
+        "thoughtlessness"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=56024",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "所有格",
+      "reading": "しょゆうかく",
+      "source": "krdict",
+      "source_id": "78165:1",
+      "source_gloss": "소유격",
+      "jmdict_english_glosses": [
+        "possessive case"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=78165",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "鱗茎",
+      "reading": "りんけい",
+      "source": "krdict",
+      "source_id": "91147:1",
+      "source_gloss": "구근",
+      "jmdict_english_glosses": [
+        "bulb"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=91147",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "教示",
+      "reading": "きょうじ",
+      "source": "krdict",
+      "source_id": "32427:1,28169:2",
+      "source_gloss": "교시; 코치",
+      "jmdict_english_glosses": [
+        "guidance",
+        "informing",
+        "instruction",
+        "teaching"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=32427;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=28169",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "幅",
+      "reading": "はば",
+      "source": "krdict",
+      "source_id": "91016:1,42368:1,73265:1,73265:2",
+      "source_gloss": "나비; 너비; 폭",
+      "jmdict_english_glosses": [
+        "breadth",
+        "difference",
+        "freedom",
+        "gap",
+        "latitude",
+        "range",
+        "width"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=91016;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=42368;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=73265",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "記述的",
+      "reading": "きじゅつてき",
+      "source": "krdict",
+      "source_id": "63042:1",
+      "source_gloss": "서사적",
+      "jmdict_english_glosses": [
+        "descriptive"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=63042",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "中華",
+      "reading": "ちゅうか",
+      "source": "krdict",
+      "source_id": "26146:1,77240:2,79313:1",
+      "source_gloss": "중식; 중화요리; 청요리",
+      "jmdict_english_glosses": [
+        "china",
+        "chinese food"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=26146;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=77240;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=79313",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "含める",
+      "reading": "ふくめる",
+      "source": "wiktionary",
+      "source_id": "含める#1",
+      "source_gloss": "포함시키다",
+      "jmdict_english_glosses": [
+        "to include",
+        "to instruct",
+        "to make one understand",
+        "to permeate with flavor",
+        "to put in",
+        "to put in mouth"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E5%90%AB%E3%82%81%E3%82%8B",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "桃",
+      "reading": "もも",
+      "source": "wiktionary",
+      "source_id": "桃#1",
+      "source_gloss": "복숭아",
+      "jmdict_english_glosses": [
+        "peach"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E6%A1%83",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "榎茸",
+      "reading": "えのきたけ",
+      "source": "krdict",
+      "source_id": "81058:1",
+      "source_gloss": "팽이버섯",
+      "jmdict_english_glosses": [
+        "enoki mushroom",
+        "enokidake",
+        "enokitake",
+        "velvet shank",
+        "winter mushroom"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=81058",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "陸路",
+      "reading": "りくろ",
+      "source": "krdict",
+      "source_id": "70341:1",
+      "source_gloss": "육로",
+      "jmdict_english_glosses": [
+        "by land",
+        "land route",
+        "overland",
+        "overland route"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=70341",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "順調",
+      "reading": "じゅんちょう",
+      "source": "wiktionary",
+      "source_id": "順調#1",
+      "source_gloss": "순조; 순조롭다",
+      "jmdict_english_glosses": [
+        "all right",
+        "doing well",
+        "favorable",
+        "favourable",
+        "ok"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E9%A0%86%E8%AA%BF",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "通り雨",
+      "reading": "とおりあめ",
+      "source": "krdict",
+      "source_id": "63524:1",
+      "source_gloss": "소나기",
+      "jmdict_english_glosses": [
+        "passing rain",
+        "shower"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=63524",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "異常",
+      "reading": "いじょう",
+      "source": "wiktionary",
+      "source_id": "異常#1",
+      "source_gloss": "이상; 이상한",
+      "jmdict_english_glosses": [
+        "abnormal",
+        "extraordinary",
+        "remarkable",
+        "uncommon",
+        "unusual"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E7%95%B0%E5%B8%B8",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "名医",
+      "reading": "めいい",
+      "source": "krdict",
+      "source_id": "55364:1",
+      "source_gloss": "명의",
+      "jmdict_english_glosses": [
+        "excellent physician",
+        "noted doctor"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=55364",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "戦略家",
+      "reading": "せんりゃくか",
+      "source": "krdict",
+      "source_id": "74958:1",
+      "source_gloss": "전략가",
+      "jmdict_english_glosses": [
+        "strategist"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=74958",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "余裕",
+      "reading": "よゆう",
+      "source": "krdict",
+      "source_id": "26115:1,67787:1",
+      "source_gloss": "경황; 여유",
+      "jmdict_english_glosses": [
+        "allowance",
+        "calm",
+        "complacency",
+        "composure",
+        "flexibility",
+        "leeway",
+        "margin",
+        "placidity",
+        "room",
+        "scope",
+        "space",
+        "surplus",
+        "time"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=26115;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=67787",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "羅盤",
+      "reading": "らばん",
+      "source": "krdict",
+      "source_id": "16311:1",
+      "source_gloss": "나침반",
+      "jmdict_english_glosses": [
+        "compass"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=16311",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "乱調子",
+      "reading": "らんちょうし",
+      "source": "krdict",
+      "source_id": "40740:1",
+      "source_gloss": "난조",
+      "jmdict_english_glosses": [
+        "confusion"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=40740",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "捕捉",
+      "reading": "ほそく",
+      "source": "wiktionary",
+      "source_id": "捕捉#1",
+      "source_gloss": "포착; 포착하다",
+      "jmdict_english_glosses": [
+        "apprehension",
+        "capture",
+        "grasp",
+        "prehension",
+        "seizure",
+        "trapping",
+        "understanding"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E6%8D%95%E6%8D%89",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "若しかすると",
+      "reading": "もしかすると",
+      "source": "krdict",
+      "source_id": "85102:1,85110:1",
+      "source_gloss": "행여; 행여나",
+      "jmdict_english_glosses": [
+        "by some chance",
+        "maybe",
+        "perhaps",
+        "possibly"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=85102;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=85110",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "雌鳥",
+      "reading": "めんどり",
+      "source": "krdict",
+      "source_id": "66681:1",
+      "source_gloss": "암탉",
+      "jmdict_english_glosses": [
+        "female bird",
+        "hen"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=66681",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "公園",
+      "reading": "こうえん",
+      "source": "wiktionary",
+      "source_id": "公園#1",
+      "source_gloss": "(1880년대 중반부터) 공원",
+      "jmdict_english_glosses": [
+        "park"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E5%85%AC%E5%9C%92",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "目的地",
+      "reading": "もくてきち",
+      "source": "wiktionary",
+      "source_id": "目的地#1",
+      "source_gloss": "목적지",
+      "jmdict_english_glosses": [
+        "destination",
+        "goal"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E7%9B%AE%E7%9A%84%E5%9C%B0",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "型式",
+      "reading": "けいしき",
+      "source": "krdict",
+      "source_id": "85909:1",
+      "source_gloss": "형식",
+      "jmdict_english_glosses": [
+        "model",
+        "type"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=85909",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "網",
+      "reading": "もう",
+      "source": "krdict",
+      "source_id": "91110:2",
+      "source_gloss": "망",
+      "jmdict_english_glosses": [
+        "network"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=91110",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "色",
+      "reading": "いろ",
+      "source": "krdict",
+      "source_id": "62079:2,62079:3,62079:7,15827:1,20231:1,20231:2,20231:4",
+      "source_gloss": "빛; 빛깔; 색",
+      "jmdict_english_glosses": [
+        "air",
+        "appearance",
+        "beauty",
+        "character",
+        "color",
+        "colour",
+        "complexion",
+        "expression",
+        "feeling",
+        "hue",
+        "kind",
+        "look",
+        "love",
+        "love affair",
+        "lover",
+        "lust",
+        "paramour",
+        "personality",
+        "physical appeal",
+        "ring",
+        "sensuality",
+        "sexiness",
+        "shade",
+        "skin color",
+        "skin colour",
+        "sound",
+        "tinge",
+        "tint",
+        "tone",
+        "tune",
+        "type",
+        "variety"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=62079;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=15827;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=20231",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "へ",
+      "reading": "へ",
+      "source": "wiktionary",
+      "source_id": "へ#1",
+      "source_gloss": "(방향성, 경로를 강조함) ~에/으로/로(주의, 조사로 쓰일 때에는 발음이 변함). (참고: 도달점을 강조할 때에는 に를 쓴다.); 가나 중에서 は행의 4번째 문자",
+      "jmdict_english_glosses": [
+        "for",
+        "to",
+        "towards"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E3%81%B8",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "効率性",
+      "reading": "こうりつせい",
+      "source": "krdict",
+      "source_id": "89087:1",
+      "source_gloss": "효율성",
+      "jmdict_english_glosses": [
+        "efficiency"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=89087",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "ウィキペディア",
+      "reading": "ウィキペディア",
+      "source": "wiktionary",
+      "source_id": "ウィキペディア#1",
+      "source_gloss": "위키백과",
+      "jmdict_english_glosses": [
+        "wikipedia"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E3%82%A6%E3%82%A3%E3%82%AD%E3%83%9A%E3%83%87%E3%82%A3%E3%82%A2",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "胃",
+      "reading": "い",
+      "source": "wiktionary",
+      "source_id": "胃#1",
+      "source_gloss": "위(胃)",
+      "jmdict_english_glosses": [
+        "chinese \"stomach\" constellation",
+        "stomach"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E8%83%83",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "生物",
+      "reading": "せいぶつ",
+      "source": "krdict",
+      "source_id": "63318:1,29038:1,29038:2,63401:1",
+      "source_gloss": "생명체; 생물; 생물체",
+      "jmdict_english_glosses": [
+        "biology",
+        "creature",
+        "life",
+        "living thing",
+        "organism"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=63318;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=29038;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=63401",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "部室",
+      "reading": "ぶしつ",
+      "source": "wiktionary",
+      "source_id": "部室#1",
+      "source_gloss": "부실",
+      "jmdict_english_glosses": [
+        "clubroom"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E9%83%A8%E5%AE%A4",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "品位",
+      "reading": "ひんい",
+      "source": "krdict",
+      "source_id": "79172:1,88464:1",
+      "source_gloss": "체통; 품위",
+      "jmdict_english_glosses": [
+        "carat",
+        "dignity",
+        "fineness",
+        "grace",
+        "grade",
+        "karat",
+        "nobility",
+        "quality"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=79172;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=88464",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "瑕",
+      "reading": "きず",
+      "source": "krdict",
+      "source_id": "63978:2,63978:4",
+      "source_gloss": "손상",
+      "jmdict_english_glosses": [
+        "bruise",
+        "chip",
+        "crack",
+        "cut",
+        "defect",
+        "disgrace",
+        "dishonor",
+        "dishonour",
+        "flaw",
+        "gash",
+        "hurt",
+        "hurt feelings",
+        "injury",
+        "nick",
+        "scar",
+        "scrape",
+        "scratch",
+        "stain",
+        "weak point",
+        "weakness",
+        "wound"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=63978",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "振興",
+      "reading": "しんこう",
+      "source": "krdict",
+      "source_id": "76180:1",
+      "source_gloss": "진흥",
+      "jmdict_english_glosses": [
+        "encouragement",
+        "promotion"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=76180",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "祭壇",
+      "reading": "さいだん",
+      "source": "krdict",
+      "source_id": "75462:1,75462:2",
+      "source_gloss": "제단",
+      "jmdict_english_glosses": [
+        "altar"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=75462",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "少女",
+      "reading": "しょうじょ",
+      "source": "krdict",
+      "source_id": "63597:1",
+      "source_gloss": "소녀",
+      "jmdict_english_glosses": [
+        "female between 17 and 20 years old",
+        "girl",
+        "young lady"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=63597",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "彼氏",
+      "reading": "かれし",
+      "source": "krdict",
+      "source_id": "32828:2,37348:1,601044:1",
+      "source_gloss": "그이; 남자 친구; 남친",
+      "jmdict_english_glosses": [
+        "boyfriend",
+        "he",
+        "him"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=32828;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=37348;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=601044",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "毛革",
+      "reading": "けがわ",
+      "source": "krdict",
+      "source_id": "80441:1",
+      "source_gloss": "털가죽",
+      "jmdict_english_glosses": [
+        "fur",
+        "kanji \"fur\" radical",
+        "pelt",
+        "skin"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=80441",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "冷却期間",
+      "reading": "れいきゃくきかん",
+      "source": "krdict",
+      "source_id": "41169:1,41171:1",
+      "source_gloss": "냉각기; 냉각기간",
+      "jmdict_english_glosses": [
+        "cooling-off period"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=41169;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=41171",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "半円",
+      "reading": "はんえん",
+      "source": "krdict",
+      "source_id": "64361:1",
+      "source_gloss": "반원",
+      "jmdict_english_glosses": [
+        "semicircle"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=64361",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "冗談",
+      "reading": "じょうだん",
+      "source": "wiktionary",
+      "source_id": "冗談#1",
+      "source_gloss": "농담; 농담하다",
+      "jmdict_english_glosses": [
+        "funny story",
+        "jest",
+        "joke"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E5%86%97%E8%AB%87",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "介護者",
+      "reading": "かいごしゃ",
+      "source": "krdict",
+      "source_id": "15463:1",
+      "source_gloss": "간병인",
+      "jmdict_english_glosses": [
+        "caregiver",
+        "carer"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=15463",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "不発",
+      "reading": "ふはつ",
+      "source": "krdict",
+      "source_id": "60428:1,60428:2",
+      "source_gloss": "불발",
+      "jmdict_english_glosses": [
+        "misfire"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=60428",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "妥当性",
+      "reading": "だとうせい",
+      "source": "krdict",
+      "source_id": "79459:1",
+      "source_gloss": "타당성",
+      "jmdict_english_glosses": [
+        "propriety",
+        "validity",
+        "verification"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=79459",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "精力",
+      "reading": "せいりょく",
+      "source": "krdict",
+      "source_id": "76069:1",
+      "source_gloss": "정력",
+      "jmdict_english_glosses": [
+        "energy",
+        "vigor",
+        "vigour",
+        "vitality"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=76069",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "虚しい",
+      "reading": "むなしい",
+      "source": "krdict",
+      "source_id": "51340:2,59283:1,84012:1",
+      "source_gloss": "덧없다; 부질없다; 하염없다",
+      "jmdict_english_glosses": [
+        "empty",
+        "fruitless",
+        "futile",
+        "ineffective",
+        "lifeless",
+        "vacant",
+        "vain",
+        "void"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=51340;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=59283;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=84012",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "反省",
+      "reading": "はんせい",
+      "source": "wiktionary",
+      "source_id": "反省#1",
+      "source_gloss": "반성",
+      "jmdict_english_glosses": [
+        "being sorry",
+        "contemplation",
+        "introspection",
+        "meditation",
+        "reconsideration",
+        "reflection",
+        "regret",
+        "remorse",
+        "repentance"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E5%8F%8D%E7%9C%81",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "オペ",
+      "reading": "オペ",
+      "source": "krdict",
+      "source_id": "65022:1",
+      "source_gloss": "수술",
+      "jmdict_english_glosses": [
+        "operation"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=65022",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "泣き虫",
+      "reading": "なきむし",
+      "source": "krdict",
+      "source_id": "67231:1,69341:1",
+      "source_gloss": "엄살꾸러기; 울보",
+      "jmdict_english_glosses": [
+        "blubberer",
+        "crybaby"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=67231;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=69341",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "札",
+      "reading": "ふだ",
+      "source": "krdict",
+      "source_id": "91479:1,91479:4,84238:1",
+      "source_gloss": "패; 표찰",
+      "jmdict_english_glosses": [
+        "card",
+        "charm",
+        "check",
+        "label",
+        "plate",
+        "playing card",
+        "receipt",
+        "sign",
+        "slip of paper posted on shrine pillars by pilgrims",
+        "tag",
+        "talisman",
+        "ticket",
+        "token"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=91479;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=84238",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "超自然的",
+      "reading": "ちょうしぜんてき",
+      "source": "krdict",
+      "source_id": "79677:1",
+      "source_gloss": "초자연적",
+      "jmdict_english_glosses": [
+        "supernatural"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=79677",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "シラカンバ",
+      "reading": "シラカンバ",
+      "source": "wiktionary",
+      "source_id": "シラカンバ#1",
+      "source_gloss": "자작나무",
+      "jmdict_english_glosses": [
+        "japanese white birch"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E3%82%B7%E3%83%A9%E3%82%AB%E3%83%B3%E3%83%90",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "ルーマニア人",
+      "reading": "ルーマニアじん",
+      "source": "wiktionary",
+      "source_id": "ルーマニア人#1",
+      "source_gloss": "루마니아인",
+      "jmdict_english_glosses": [
+        "romanian"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E3%83%AB%E3%83%BC%E3%83%9E%E3%83%8B%E3%82%A2%E4%BA%BA",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "アスベスト",
+      "reading": "アスベスト",
+      "source": "krdict",
+      "source_id": "78141:1",
+      "source_gloss": "석면",
+      "jmdict_english_glosses": [
+        "asbestos"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=78141",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "並ぶ",
+      "reading": "ならぶ",
+      "source": "wiktionary",
+      "source_id": "並ぶ#1,並ぶ#2",
+      "source_gloss": "줄을 서다; 진열되다",
+      "jmdict_english_glosses": [
+        "to equal",
+        "to line up",
+        "to match",
+        "to rival",
+        "to stand in a line"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E4%B8%A6%E3%81%B6",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "フォルダー",
+      "reading": "フォルダー",
+      "source": "krdict",
+      "source_id": "62871:1,83720:1",
+      "source_gloss": "서류철; 폴더",
+      "jmdict_english_glosses": [
+        "folder"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=62871;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=83720",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "棹",
+      "reading": "さお",
+      "source": "krdict",
+      "source_id": "75078:1",
+      "source_gloss": "장대",
+      "jmdict_english_glosses": [
+        "beam",
+        "counter for flags",
+        "counter for long, thin japanese sweets",
+        "neck",
+        "penis",
+        "pole",
+        "rod",
+        "shamisen",
+        "single line"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=75078",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "双方向",
+      "reading": "そうほうこう",
+      "source": "krdict",
+      "source_id": "600471:1",
+      "source_gloss": "쌍방향",
+      "jmdict_english_glosses": [
+        "bidirectional",
+        "interactive",
+        "two-way"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=600471",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "せっせと",
+      "reading": "せっせと",
+      "source": "wiktionary",
+      "source_id": "せっせと#1",
+      "source_gloss": "꾸준히",
+      "jmdict_english_glosses": [
+        "assiduously",
+        "beavering away",
+        "diligently",
+        "industriously"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E3%81%9B%E3%81%A3%E3%81%9B%E3%81%A8",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "一例",
+      "reading": "いちれい",
+      "source": "krdict",
+      "source_id": "72778:1",
+      "source_gloss": "일례",
+      "jmdict_english_glosses": [
+        "an instance",
+        "example"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=72778",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "国内総生産",
+      "reading": "こくないそうせいさん",
+      "source": "krdict",
+      "source_id": "89063:1",
+      "source_gloss": "국내 총생산",
+      "jmdict_english_glosses": [
+        "gdp",
+        "gross domestic product"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=89063",
+      "decision": "accept",
+      "note": "Random sample row checked against its Korean source gloss, Japanese spelling/reading, and available JMdict English glosses."
+    },
+    {
+      "written": "割引",
+      "reading": "わりびき",
+      "source": "krdict",
+      "source_id": "72464:1",
+      "source_gloss": "할인",
+      "jmdict_english_glosses": [
+        "discount",
+        "rebate",
+        "reduction",
+        "tenths discounted",
+        "tenths reduced"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=72464",
+      "decision": "accept",
+      "note": "Named everyday-word check; Korean meaning and exact Japanese written/reading pair checked against JMdict glosses."
+    },
+    {
+      "written": "半額",
+      "reading": "はんがく",
+      "source": "krdict",
+      "source_id": "56750:1,57158:1",
+      "source_gloss": "반값; 반액",
+      "jmdict_english_glosses": [
+        "half fare",
+        "half price",
+        "half the amount"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=56750;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=57158",
+      "decision": "accept",
+      "note": "Named everyday-word check; Korean meaning and exact Japanese written/reading pair checked against JMdict glosses."
+    },
+    {
+      "written": "本日",
+      "reading": "ほんじつ",
+      "source": "wiktionary",
+      "source_id": "本日#1",
+      "source_gloss": "오늘",
+      "jmdict_english_glosses": [
+        "this day",
+        "today"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E6%9C%AC%E6%97%A5",
+      "decision": "accept",
+      "note": "Named everyday-word check; Korean meaning and exact Japanese written/reading pair checked against JMdict glosses."
+    },
+    {
+      "written": "果物",
+      "reading": "かぶつ",
+      "source": "krdict",
+      "source_id": "18264:1",
+      "source_gloss": "과일",
+      "jmdict_english_glosses": [
+        "fruit"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=18264",
+      "decision": "accept",
+      "note": "Named everyday-word check; Korean meaning and exact Japanese written/reading pair checked against JMdict glosses."
+    },
+    {
+      "written": "果物",
+      "reading": "くだもの",
+      "source": "krdict",
+      "source_id": "18264:1,65704:1",
+      "source_gloss": "과일; 실과",
+      "jmdict_english_glosses": [
+        "fruit"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=18264;https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=65704",
+      "decision": "accept",
+      "note": "Named everyday-word check; Korean meaning and exact Japanese written/reading pair checked against JMdict glosses."
+    },
+    {
+      "written": "無料",
+      "reading": "むりょう",
+      "source": "wiktionary",
+      "source_id": "無料#1",
+      "source_gloss": "무료",
+      "jmdict_english_glosses": [
+        "free",
+        "gratuitous"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E7%84%A1%E6%96%99",
+      "decision": "accept",
+      "note": "Named everyday-word check; Korean meaning and exact Japanese written/reading pair checked against JMdict glosses."
+    },
+    {
+      "written": "野菜",
+      "reading": "やさい",
+      "source": "wiktionary",
+      "source_id": "野菜#1",
+      "source_gloss": "채소",
+      "jmdict_english_glosses": [
+        "cannabis",
+        "marijuana",
+        "vegetable"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E9%87%8E%E8%8F%9C",
+      "decision": "accept",
+      "note": "Named everyday-word check; Korean meaning and exact Japanese written/reading pair checked against JMdict glosses."
+    },
+    {
+      "written": "駐車場",
+      "reading": "ちゅうしゃじょう",
+      "source": "krdict",
+      "source_id": "91772:1",
+      "source_gloss": "주차장",
+      "jmdict_english_glosses": [
+        "car park",
+        "carpark",
+        "parking garage",
+        "parking lot"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=91772",
+      "decision": "accept",
+      "note": "Named everyday-word check; Korean meaning and exact Japanese written/reading pair checked against JMdict glosses."
+    },
+    {
+      "written": "入口",
+      "reading": "いりぐち",
+      "source": "krdict",
+      "source_id": "57179:2",
+      "source_gloss": "문턱",
+      "jmdict_english_glosses": [
+        "entrance"
+      ],
+      "source_url": "https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=57179",
+      "decision": "exclude",
+      "note": "KRDICT Japanese Equivalent.definition labels this as metaphorical; excluded."
+    },
+    {
+      "written": "福",
+      "reading": "ふく",
+      "source": "wiktionary",
+      "source_id": "福#1",
+      "source_gloss": "다음 지명에 쓰임",
+      "jmdict_english_glosses": [
+        "good fortune",
+        "happiness"
+      ],
+      "source_url": "https://ko.wiktionary.org/wiki/%E7%A6%8F",
+      "decision": "exclude",
+      "note": "Gloss is a cross-reference to a place name, not a lexical meaning."
+    }
+  ],
+  "exclude": [
+    {
+      "written": "入口",
+      "reading": "いりぐち",
+      "source": "krdict",
+      "source_id": "57179:2",
+      "reason": "KRDICT Japanese Equivalent.definition is explicitly metaphorical."
+    },
+    {
+      "written": "福",
+      "reading": "ふく",
+      "source": "wiktionary",
+      "source_id": "福#1",
+      "reason": "Cross-reference to a place name, not a lexical meaning."
+    }
+  ],
+  "sample_random_count": 100,
+  "named_check_count": 8,
+  "manual_exclusion_count": 2
+}

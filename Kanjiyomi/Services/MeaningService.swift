@@ -51,8 +51,11 @@ final class MeaningService {
     static let shared = MeaningService()
 
     private var generatorStorage: AnyObject?
+    private let dictionary: DictionaryService
 
-    private init() {}
+    init(dictionary: DictionaryService = .shared) {
+        self.dictionary = dictionary
+    }
 
     var isGenerationAvailable: Bool {
         #if canImport(FoundationModels)
@@ -83,12 +86,15 @@ final class MeaningService {
         surface: String,
         lemma: String,
         modelContext: ModelContext,
-        requiredSource: WordCache.MeaningSource? = nil
+        requiredSource: WordCache.MeaningSource? = nil,
+        dictionaryEntry: DictionaryEntry? = nil
     ) -> EnrichedWord {
         let key = WordCache.makeKey(surface: surface, lemma: lemma)
         let cached = cacheRow(key: key, context: modelContext)
         let cachedMeaningUsable = cached.map { row in
             Self.containsHangul(row.meaningKO)
+                && row.meaningSource != WordCache.MeaningSource.dictionary.rawValue
+                && (dictionaryEntry == nil || row.reading == dictionaryEntry?.reading)
                 && (requiredSource == nil || row.isMeaning(from: requiredSource!))
         } ?? false
 
@@ -104,29 +110,34 @@ final class MeaningService {
             )
         }
 
-        let dict = DictionaryService.shared.lookup(surface: surface, lemma: lemma)
+        let dict = dictionaryEntry ?? dictionary.lookup(surface: surface, lemma: lemma)
         let reading = dict?.reading.isEmpty == false ? dict!.reading : guessReading(surface: surface, lemma: lemma)
+        let meaning = requiredSource == nil ? dict?.glossKO ?? "" : ""
         let enriched = EnrichedWord(
             reading: reading,
             hangul: KanaRomanizer.toHangul(reading),
-            meaningKO: "",
+            meaningKO: meaning,
             meaningEN: dict?.glossEN ?? "",
             partOfSpeech: dict?.partOfSpeech ?? "",
-            examples: cached?.examples ?? []
+            examples: cached?.reading == reading && cached?.meaningKO == meaning ? cached?.examples ?? [] : []
         )
 
         // Store the dictionary half now so generation only has to fill in the meaning.
         // Rows written while the model was unavailable hold no Korean meaning; refresh
         // them in place so any example sentences already generated survive.
         if let cached {
+            let readingChanged = cached.reading != reading
             cached.reading = enriched.reading
             cached.hangul = enriched.hangul
             // A meaning skipped only because it came from another generator is still a good
             // meaning. Leave it alone: this pass may end up discarded, and until the user
             // saves its results the stored one is what everything else should keep showing.
-            if !Self.containsHangul(cached.meaningKO) {
-                cached.meaningKO = ""
-                cached.meaningSource = ""
+            if !Self.containsHangul(cached.meaningKO)
+                || readingChanged
+                || (requiredSource == nil && cached.isMeaning(from: .dictionary)) {
+                if cached.meaningKO != meaning || readingChanged { cached.clearExamples() }
+                cached.meaningKO = meaning
+                cached.meaningSource = meaning.isEmpty ? "" : WordCache.MeaningSource.dictionary.rawValue
             }
             cached.meaningEN = enriched.meaningEN
             cached.partOfSpeech = enriched.partOfSpeech
@@ -139,9 +150,10 @@ final class MeaningService {
                     lemma: lemma,
                     reading: enriched.reading,
                     hangul: enriched.hangul,
-                    meaningKO: "",
+                    meaningKO: meaning,
                     meaningEN: enriched.meaningEN,
-                    partOfSpeech: enriched.partOfSpeech
+                    partOfSpeech: enriched.partOfSpeech,
+                    meaningSource: meaning.isEmpty ? nil : .dictionary
                 )
             )
         }
@@ -325,7 +337,10 @@ final class MeaningService {
                     hangul: word.hangul,
                     meaningKO: word.meaningKO,
                     meaningEN: word.meaningEN,
-                    partOfSpeech: word.partOfSpeech
+                    partOfSpeech: word.partOfSpeech,
+                    meaningSource: !word.meaningKO.isEmpty
+                        && dictionary.lookup(surface: word.surface, lemma: word.lemma)?.glossKO == word.meaningKO
+                        ? .dictionary : nil
                 )
                 modelContext.insert(created)
                 return created
@@ -493,15 +508,17 @@ private final class MeaningGenerator {
         """
 
         do {
-            let response = try await session.respond(
-                to: prompt,
-                generating: SegmentedLineList.self,
-                options: GenerationOptions(
-                    sampling: .greedy,
-                    maximumResponseTokens: 120 * batch.count
-                )
-            )
-            let items = response.content.items
+            let content = try await Self.withTimeout {
+                try await session.respond(
+                    to: prompt,
+                    generating: SegmentedLineList.self,
+                    options: GenerationOptions(
+                        sampling: .greedy,
+                        maximumResponseTokens: 120 * batch.count
+                    )
+                ).content
+            }
+            let items = content.items
             let wordsByLine = Dictionary(items.map { ($0.line, $0.words) }) { first, _ in first }
 
             // Matching on the echoed line survives a dropped entry; position covers the
@@ -532,15 +549,17 @@ private final class MeaningGenerator {
         batchesOnSession += 1
 
         do {
-            let response = try await session.respond(
-                to: prompt,
-                generating: GeneratedMeaningList.self,
-                options: GenerationOptions(
-                    sampling: .greedy,
-                    maximumResponseTokens: 140 * requests.count
-                )
-            )
-            let items = response.content.items
+            let content = try await Self.withTimeout {
+                try await session.respond(
+                    to: prompt,
+                    generating: GeneratedMeaningList.self,
+                    options: GenerationOptions(
+                        sampling: .greedy,
+                        maximumResponseTokens: 140 * requests.count
+                    )
+                ).content
+            }
+            let items = content.items
             var result: [String: RawMeaning] = [:]
             for item in items {
                 guard let key = keysByWord[item.word], let raw = Self.raw(from: item) else { continue }
@@ -576,15 +595,17 @@ private final class MeaningGenerator {
         """
 
         do {
-            let response = try await session.respond(
-                to: prompt,
-                generating: GeneratedReadingList.self,
-                options: GenerationOptions(
-                    sampling: .greedy,
-                    maximumResponseTokens: 60 * words.count
-                )
-            )
-            let items = response.content.items
+            let content = try await Self.withTimeout {
+                try await session.respond(
+                    to: prompt,
+                    generating: GeneratedReadingList.self,
+                    options: GenerationOptions(
+                        sampling: .greedy,
+                        maximumResponseTokens: 60 * words.count
+                    )
+                ).content
+            }
+            let items = content.items
             var byWord = Dictionary(
                 items.map { ($0.word, $0.reading) },
                 uniquingKeysWith: { first, _ in first }
@@ -614,13 +635,14 @@ private final class MeaningGenerator {
         """
 
         do {
-            let response = try await session.respond(
-                to: prompt,
-                generating: GeneratedExamples.self,
-                options: GenerationOptions(maximumResponseTokens: 400)
-            )
-            let content = response.content
-            return [
+            let content = try await Self.withTimeout {
+                try await session.respond(
+                    to: prompt,
+                    generating: GeneratedExamples.self,
+                    options: GenerationOptions(maximumResponseTokens: 400)
+                ).content
+            }
+                        return [
                 WordExample(japanese: content.japanese1, korean: content.korean1),
                 WordExample(japanese: content.japanese2, korean: content.korean2)
             ]
@@ -639,6 +661,28 @@ private final class MeaningGenerator {
             reading: item.reading.trimmingCharacters(in: .whitespacesAndNewlines)
         )
     }
+
+    /// No generation call may hold a scan up for more than this. When it runs out the batch is
+    /// dropped and the dictionary results already on screen stand, as with any other failure.
+    private static let timeout: Duration = .seconds(30)
+
+    // ponytail: relies on the model call honouring cancellation; if it ever ignores it the
+    // group still waits for it, and the fix is to resume a continuation from the timer instead.
+    private static func withTimeout<T: Sendable>(
+        _ operation: @escaping @MainActor () async throws -> T
+    ) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask { @MainActor in try await operation() }
+            group.addTask {
+                try await Task.sleep(for: timeout)
+                throw GenerationTimeout()
+            }
+            defer { group.cancelAll() }
+            return try await group.next()!
+        }
+    }
+
+    private struct GenerationTimeout: Error {}
 
     private func activeMeaningSession() -> LanguageModelSession {
         if let session = meaningSession, batchesOnSession < Self.maxBatchesPerSession {

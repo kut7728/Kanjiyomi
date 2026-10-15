@@ -86,7 +86,7 @@ struct DictionarySearchView: View {
                 }
             }
             Spacer(minLength: 8)
-            Text(entry.glossEN)
+            Text(entry.displayMeaning)
                 .font(KYFont.callout())
                 .foregroundStyle(KYColor.textSecondary)
                 .lineLimit(2)
@@ -120,7 +120,8 @@ struct DictionarySearchView: View {
             let enriched = MeaningService.shared.resolve(
                 surface: headword,
                 lemma: headword,
-                modelContext: modelContext
+                modelContext: modelContext,
+                dictionaryEntry: entry
             )
             // The search row already carries a reading, so falling back to it also means
             // deriving the Hangul from it rather than leaving the pronunciation blank.

@@ -28,7 +28,6 @@ struct KanjiMeta: Hashable, Sendable {
     var hanjaKO: String
     var onReadings: [String]
     var kunReadings: [String]
-    var isIrregularProne: Bool = false
 }
 
 struct KanjiOccurrence: Hashable, Sendable {

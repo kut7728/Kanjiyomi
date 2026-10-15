@@ -10,6 +10,7 @@ struct SettingsView: View {
 
     @State private var draftKey = ""
     @State private var showDeleteConfirmation = false
+    @State private var showOnboarding = false
 
     private var service: OpenAIService { OpenAIService.shared }
 
@@ -21,10 +22,18 @@ struct SettingsView: View {
                     modelSection
                 }
                 privacySection
+                aboutSection
             }
             .scrollContentBackground(.hidden)
             .background(KYColor.background)
             .navigationTitle("설정")
+            .fullScreenCover(isPresented: $showOnboarding) {
+                OnboardingView {
+                    showOnboarding = false
+                } onConfigureAPIKey: {
+                    showOnboarding = false
+                }
+            }
         }
     }
 
@@ -98,7 +107,7 @@ struct SettingsView: View {
             row(
                 icon: "arrow.up.forward.app",
                 title: "ChatGPT를 고른 경우에만 전송",
-                detail: "사진에서 읽어낸 글자만 OpenAI로 보냅니다. 사진 자체는 기기를 떠나지 않습니다."
+                detail: "사진에서 읽어낸 글자와, 그 단어의 읽기·영어 뜻을 OpenAI로 보냅니다. 사진 자체는 기기를 떠나지 않습니다."
             )
             row(
                 icon: "wonsign.circle",
@@ -107,6 +116,21 @@ struct SettingsView: View {
             )
         } header: {
             Text("개인정보")
+        }
+        .listRowBackground(KYColor.card)
+    }
+
+    private var aboutSection: some View {
+        Section {
+            Button("사용 방법·모드 안내") { showOnboarding = true }
+                .accessibilityIdentifier("settings.onboarding")
+            NavigationLink("오픈소스·라이선스") {
+                LicensesView()
+            }
+            .font(KYFont.callout())
+            .foregroundStyle(KYColor.textPrimary)
+        } header: {
+            Text("정보")
         }
         .listRowBackground(KYColor.card)
     }

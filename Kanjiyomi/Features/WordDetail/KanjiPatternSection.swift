@@ -7,6 +7,8 @@ import SwiftData
 import SwiftUI
 
 struct KanjiPatternSection: View {
+    @Environment(\.modelContext) private var modelContext
+
     let word: RecognizedWord
     let savedWords: [VocabWord]
     let catalog: KanjiCatalog
@@ -144,14 +146,21 @@ struct KanjiPatternSection: View {
             }
             ForEach(unseen.prefix(4), id: \.kanji) { entry in
                 Button {
+                    let enriched = MeaningService.shared.resolve(
+                        surface: entry.kanji,
+                        lemma: entry.kanji,
+                        modelContext: modelContext,
+                        dictionaryEntry: entry
+                    )
                     relatedDestination = RecognizedWord(
                         surface: entry.kanji,
                         lemma: entry.kanji,
-                        reading: entry.reading,
-                        hangul: KanaRomanizer.toHangul(entry.reading),
-                        meaningKO: "",
-                        meaningEN: entry.glossEN,
-                        partOfSpeech: entry.partOfSpeech
+                        reading: enriched.reading,
+                        hangul: enriched.hangul,
+                        meaningKO: enriched.meaningKO,
+                        meaningEN: enriched.meaningEN,
+                        partOfSpeech: enriched.partOfSpeech,
+                        examples: enriched.examples
                     )
                 } label: {
                     relatedRow(

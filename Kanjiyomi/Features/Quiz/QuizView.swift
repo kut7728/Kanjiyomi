@@ -190,34 +190,46 @@ final class QuizViewModel {
     }
 
     private func makeQuestion(correct: VocabWord, pool: [VocabWord], mode: QuizMode) -> QuizQuestion? {
-        let distractors = pool
-            .filter { $0.id != correct.id }
-            .shuffled()
-            .prefix(3)
-        guard distractors.count == 3 else { return nil }
+        let others = pool.filter { $0.id != correct.id }.shuffled()
 
         switch mode {
         case .wordToMeaning:
             let answer = correct.displayMeaning
-            let wrong = distractors.map(\.displayMeaning)
+            guard let choices = Self.choices(answer: answer, candidates: others.map(\.displayMeaning)) else {
+                return nil
+            }
             return QuizQuestion(
                 prompt: correct.displayHeadword,
                 answer: answer,
-                choices: ([answer] + wrong).shuffled(),
+                choices: choices,
                 trackedSurface: correct.displayHeadword
             )
         case .meaningToWord:
             let answer = correct.displayHeadword
-            let wrong = distractors.map(\.displayHeadword)
+            guard let choices = Self.choices(answer: answer, candidates: others.map(\.displayHeadword)) else {
+                return nil
+            }
             return QuizQuestion(
                 prompt: correct.displayMeaning,
                 answer: answer,
-                choices: ([answer] + wrong).shuffled(),
+                choices: choices,
                 trackedSurface: correct.displayHeadword
             )
         case .readingInference:
             return nil
         }
+    }
+
+    /// Four choices with no two alike. Two saved words can share a meaning, and a repeated
+    /// label would leave the user unable to tell the right one from a wrong one.
+    nonisolated static func choices(answer: String, candidates: [String]) -> [String]? {
+        var wrong: [String] = []
+        for candidate in candidates where candidate != answer && !wrong.contains(candidate) {
+            wrong.append(candidate)
+            if wrong.count == 3 { break }
+        }
+        guard wrong.count == 3 else { return nil }
+        return ([answer] + wrong).shuffled()
     }
 }
 

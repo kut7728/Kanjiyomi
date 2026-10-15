@@ -23,3 +23,6 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
             -only-testing:KanjiyomiTests \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Test Korean dictionary builder
+        run: python3 -m unittest discover -s tools/tests -p 'test_*.py'

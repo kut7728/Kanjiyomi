@@ -15,6 +15,8 @@ struct ContentView: View {
     @State private var scanRouter = ScanRouter()
     @State private var selection: TabID = .scan
     @State private var confirmingSave = false
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var showOnboarding = false
 
     private enum TabID: Hashable {
         case scan, vocabulary, quiz, settings
@@ -27,6 +29,15 @@ struct ContentView: View {
             // light gray.
             .preferredColorScheme(.light)
             .environment(scanRouter)
+            .task { showOnboarding = !hasCompletedOnboarding }
+            .fullScreenCover(isPresented: $showOnboarding) {
+                OnboardingView {
+                    finishOnboarding()
+                } onConfigureAPIKey: {
+                    selection = .settings
+                    finishOnboarding()
+                }
+            }
             .onChange(of: scanRouter.request) { _, request in
                 if let request { reveal(request) }
             }
@@ -53,6 +64,11 @@ struct ContentView: View {
         } else {
             tabContent
         }
+    }
+
+    private func finishOnboarding() {
+        hasCompletedOnboarding = true
+        showOnboarding = false
     }
 
     /// `isEnabled` keeps one tab view identity across the prompt appearing and disappearing.

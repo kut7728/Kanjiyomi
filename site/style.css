@@ -1,0 +1,6 @@
+body { font-family: -apple-system, "Apple SD Gothic Neo", "Hiragino Sans", sans-serif; color: #191F28; background: #F2F4F6; margin: 0; line-height: 1.7; }
+main { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+section { background: #fff; border-radius: 20px; padding: 24px; margin: 16px 0; }
+h1 { font-size: 28px; } h2 { font-size: 20px; margin-top: 0; }
+a { color: #3182F6; } .muted { color: #8B95A1; font-size: 14px; }
+table { border-collapse: collapse; width: 100%; } td, th { text-align: left; padding: 8px 4px; border-bottom: 1px solid #F2F4F6; vertical-align: top; }

@@ -56,6 +56,16 @@ enum VocabularyStore {
         return added
     }
 
+    /// Clears the link from words to a scan that is being deleted, so no word keeps pointing
+    /// at a photo that no longer exists.
+    static func forgetScan(_ scanRecordID: UUID, modelContext: ModelContext) {
+        let id: UUID? = scanRecordID
+        let linked = (try? modelContext.fetch(
+            FetchDescriptor<VocabWord>(predicate: #Predicate { $0.scanRecordID == id })
+        )) ?? []
+        for word in linked { word.scanRecordID = nil }
+    }
+
     private static func key(for word: RecognizedWord) -> String {
         key(surface: word.surface, lemma: word.lemma)
     }
