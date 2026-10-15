@@ -114,6 +114,13 @@ struct SettingsView: View {
                 title: "요금은 본인 계정에 청구",
                 detail: "요청은 저장한 키로 직접 보내집니다. 저희 서버를 거치지 않습니다."
             )
+            Link(destination: URL(string: "https://kut7728.github.io/Kanjiyomi/privacy/")!) {
+                Label("개인정보 처리방침", systemImage: "arrow.up.right.square")
+            }
+            .font(KYFont.callout())
+            .foregroundStyle(KYColor.primary)
+            .accessibilityIdentifier("settings.privacyPolicy")
+            .accessibilityHint("브라우저에서 전체 개인정보 처리방침을 엽니다.")
         } header: {
             Text("개인정보")
         }
