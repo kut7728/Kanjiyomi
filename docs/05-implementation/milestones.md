@@ -56,7 +56,7 @@ git 이력으로 묶었습니다. 날짜는 커밋 날짜입니다.
 | 작업 | 완료 기준 |
 |---|---|
 | Apple Developer Program 유료 멤버십 | App Store Connect에 앱을 만들 수 있다 |
-| 저장소 공개, GitHub Pages 켜기 | 처리방침·지원 URL이 열린다 |
+| 저장소 공개, GitHub Pages 켜기 | 완료 (2026-10-16): 공개 확인, Pages Actions 설정·배포 성공, 홈·처리방침·지원 URL HTTP 200 |
 | App Store Connect 앱 등록 | Bundle ID `my.kanji.app`, 이름·가격·국가·개인정보 라벨 입력 |
 | 실기기·TestFlight 확인 | [launch-checklist.md](../07-release/launch-checklist.md)의 확인 항목 통과. Foundation Models 지원 기기에서 AI 모드, 발음 소리 확인 포함 |
 | 스토어 스크린샷 | 6.9인치 등 스토어 규격으로 촬영 (규격 미검증) |

@@ -28,7 +28,7 @@
 | RL-03 | 출시 목표는 App Store (2026-10-12 확정) | [01 기획](../01-planning/product-requirements.md) |
 | RL-04 | Bundle ID는 `my.kanji.app` (2026-10-15 확정) | `project.pbxproj` |
 | RL-05 | 출시 국가는 대한민국·일본, 가격은 무료 (2026-10-15 확정) | — |
-| RL-06 | 개인정보 처리방침·지원 페이지는 이 저장소 `site/`를 GitHub Pages로 게시한다 (2026-10-15 확정) | `site/`, `.github/workflows/pages.yml` |
+| RL-06 | 개인정보 처리방침·지원 페이지는 이 저장소 `site/`를 GitHub Pages로 게시한다 (2026-10-15 확정, 2026-10-16 게시 완료·HTTP 200 확인) | `site/`, `.github/workflows/pages.yml` |
 | RL-07 | 소스 코드 라이선스는 두지 않는다 (All rights reserved). 사전 데이터는 원래 라이선스를 따른다 (2026-10-15 확정) | `README.md` |
 | RL-08 | 문의 창구는 kut.support@gmail.com (2026-10-15 확정) | `site/` |
 | RL-09 | 스토어 이름은 "Kanjiyomi - 일본어 사진 번역", 홈 화면 이름은 "Kanjiyomi" (2026-10-15 확정) | [store-listing.md](store-listing.md) |
@@ -36,25 +36,25 @@
 | RL-11 | 첫 출시 버전은 1.0 (1) | `project.pbxproj` |
 | RL-12 | 한국어 보조 사전 출처를 앱·README·스토어 설명에 추가하고, 미수록 단어의 영어 대체 표시와 데이터 공개 다운로드를 출시 전 확인한다 | TD-21, 한국어 사전 도입 |
 
-## 게시 URL (GitHub Pages를 켠 뒤)
+## 게시 URL (2026-10-16 배포 확인)
 
 | 페이지 | URL |
 |---|---|
 | 개인정보 처리방침 | https://kut7728.github.io/Kanjiyomi/privacy/ |
 | 지원 | https://kut7728.github.io/Kanjiyomi/support/ |
 
-저장소가 공개이고 Pages가 켜져 있어야 열립니다 ([setup-checklist](../05-implementation/setup-checklist.md#app-store-제출)).
+저장소 공개 상태와 Pages의 GitHub Actions 배포를 확인했습니다. 위 두 URL과 홈 페이지가 HTTP 200으로 응답합니다 ([setup-checklist](../05-implementation/setup-checklist.md#app-store-제출)).
 
 ## 출시 전 빠진 것
 
 | 항목 | 담당 | 상태 |
 |---|---|---|
 | `PrivacyInfo.xcprivacy` | Claude | 완료 (M9) |
-| 처리방침·지원 페이지 파일 (`site/`), Pages 워크플로 | Claude | 완료 (M9). 게시는 Pages를 켠 뒤 |
+| 처리방침·지원 페이지 파일 (`site/`), Pages 워크플로 | Claude | 완료 (M9), 2026-10-16 게시 확인 |
 | 앱 안 데이터 출처 표기 (S-13) | Claude | 완료 (M9) |
 | 스토어 등록 정보 초안 | Claude | 완료 (M9) |
 | Apple Developer Program 가입, App Store Connect 등록 | 사용자 | M10 |
-| 저장소 공개, Pages 켜기 | 사용자 | M10 |
+| 저장소 공개, Pages 켜기 | — | 완료 (2026-10-16) |
 | 스토어 규격 스크린샷 | 사용자 | M10 |
 
 ## 결정 대기

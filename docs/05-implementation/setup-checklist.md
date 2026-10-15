@@ -32,9 +32,9 @@
 M10 작업입니다. 위치는 바뀔 수 있습니다 (미검증).
 
 1. [ ] [developer.apple.com](https://developer.apple.com/programs/)에서 Apple Developer Program 가입 (유료). 현재 프로젝트 팀 `S27R5C5NF6`가 유료 팀인지 확인
-2. [ ] GitHub 저장소 Settings → General → Danger Zone → Change visibility → Public
-3. [ ] GitHub 저장소 Settings → Pages → Build and deployment → Source를 **GitHub Actions**로
-4. [ ] Actions 탭에서 "Pages" 워크플로가 통과하고 처리방침·지원 URL이 열리는지 확인
+2. [x] GitHub 저장소 Public 확인 (2026-10-16)
+3. [x] GitHub Pages Source를 **GitHub Actions**로 설정 (2026-10-16)
+4. [x] "Pages" 워크플로 성공, 홈·처리방침·지원 URL 모두 HTTP 200 확인 (2026-10-16)
 5. [ ] App Store Connect → 앱 → 새로운 앱: 플랫폼 iOS, 이름 "Kanjiyomi - 일본어 사진 번역", 기본 언어 한국어, Bundle ID `my.kanji.app`
 6. [ ] 가격 및 사용 가능 여부: 무료, 국가는 대한민국·일본
 7. [ ] 앱 개인정보: [07 privacy.md](../07-release/privacy.md#app-store-개인정보-라벨)대로 입력, 처리방침 URL 입력
